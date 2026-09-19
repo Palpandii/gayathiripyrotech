@@ -26,11 +26,10 @@ const FEATURED_PRODUCT_NAMES = [
 // These files should already be sitting in the /public/brands folder —
 // rename the "src" paths and "name" labels below to match your actual files/brands.
 const BRAND_LOGOS = [
-  { src: '/brands/brand1.png', name: 'Brand 1' },
-  { src: '/brands/brand2.png', name: 'Brand 2' },
-  { src: '/brands/brand3.png', name: 'Brand 3' },
-  { src: '/brands/brand4.png', name: 'Brand 4' },
-  { src: '/brands/brand5.png', name: 'Brand 5' },
+  { src: 'brands1.jpeg', name: 'STARVELL' },
+  { src: 'brands2.jpeg', name: 'RAVIKANNAN' },
+  { src: 'brands3.jpeg', name: 'BALA"S' },
+  { src: 'brands4.jepg', name: 'MERCURY' },
 ]
 
 export default function Home() {
