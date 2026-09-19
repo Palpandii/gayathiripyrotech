@@ -69,6 +69,9 @@
     position: sticky;
     top: 0;
     height: 100vh;
+    height: 100dvh;
+    /* keep the dark panel exactly screen-height; the nav list scrolls inside it */
+    overflow: hidden;
 }
 
 .admin-brand {
@@ -90,6 +93,21 @@
     flex-direction: column;
     gap: 4px;
     flex: 1;
+    /* min-height:0 lets a flex child shrink so overflow-y can actually scroll */
+    min-height: 0;
+    overflow-y: auto;
+    overflow-x: hidden;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 255, 255, 0.22) transparent;
+}
+
+.admin-sidebar nav::-webkit-scrollbar {
+    width: 6px;
+}
+
+.admin-sidebar nav::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.22);
+    border-radius: 999px;
 }
 
 .admin-nav-link {
@@ -283,6 +301,7 @@
 }
 
 .admin-logout {
+    flex-shrink: 0;
     background: transparent;
     border: 1px solid var(--panel-line);
     color: var(--sand-dim);
