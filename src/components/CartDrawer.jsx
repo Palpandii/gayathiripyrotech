@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useLanguage } from '../context/LanguageContext.jsx'
 import { useCart } from '../hooks/useCart.js'
 import { buildWhatsAppOrderUrl } from '../utils/whatsapp.js'
+import { API_BASE } from '../data/api.js'
 import './CartDrawer.css'
 
 const MIN_ORDER_FOR_DELIVERY = 3000
@@ -14,6 +15,8 @@ export default function CartDrawer() {
   const [customerPhone, setCustomerPhone] = useState('')
   const [deliveryAddress, setDeliveryAddress] = useState('')
   const [fulfillment, setFulfillment] = useState('pickup')
+  const [placing, setPlacing] = useState(false)
+  const [placeError, setPlaceError] = useState('')
 
   if (!isOpen) return null
 
@@ -30,7 +33,7 @@ export default function CartDrawer() {
     (effectiveFulfillment === 'delivery' && deliveryAddress.trim() === '')
     : customerPhone.trim() === ''
 
-  const canCheckout = items.length > 0 && !detailsMissing
+  const canCheckout = items.length > 0 && !detailsMissing && !placing
 
   const whatsappUrl = buildWhatsAppOrderUrl(items, totalPrice, lang, {
     customerName,
@@ -38,6 +41,49 @@ export default function CartDrawer() {
     fulfillment: effectiveFulfillment,
     deliveryAddress: effectiveFulfillment === 'delivery' ? deliveryAddress : '',
   })
+
+  async function handleCheckout(e) {
+    e.preventDefault()
+    if (!canCheckout) return
+
+    setPlacing(true)
+    setPlaceError('')
+
+    const orderPayload = {
+      customerName: customerName.trim() || 'Walk-in / Pickup customer',
+      customerPhone: customerPhone.trim(),
+      customerAddress: effectiveFulfillment === 'delivery' ? deliveryAddress.trim() : (effectiveFulfillment === 'pickup' ? 'Store pickup' : ''),
+      status: 'PENDING',
+      totalAmount: totalPrice,
+      items: items.map((item) => ({
+        productId: item.id,
+        productName: item.name_en || pickField(item, 'name'),
+        quantity: item.qty,
+        unitPrice: item.price,
+      })),
+    }
+
+    try {
+      const res = await fetch(`${API_BASE}/api/orders`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(orderPayload),
+      })
+      if (!res.ok) throw new Error(`Order save failed (${res.status})`)
+
+      // Order saved to admin panel — now hand off to WhatsApp
+      window.open(whatsappUrl, '_blank', 'noopener,noreferrer')
+      clearCart()
+      setIsOpen(false)
+    } catch (err) {
+      // Even if saving to admin fails, don't block the customer from
+      // reaching WhatsApp — just flag it so the mismatch can be noticed.
+      setPlaceError(err.message)
+      window.open(whatsappUrl, '_blank', 'noopener,noreferrer')
+    } finally {
+      setPlacing(false)
+    }
+  }
 
   return (
     <>
@@ -151,17 +197,21 @@ export default function CartDrawer() {
               {t('cart.fillDetails')}
             </p>
           )}
+          {placeError && (
+            <p className="cart-details-hint" style={{ fontSize: 12, color: '#dc2626', margin: '0 0 8px' }}>
+              Order couldn't be saved to admin panel, but your WhatsApp message was sent.
+            </p>
+          )}
           <div className="actions">
-            <a
-              href={whatsappUrl}
-              target="_blank"
-              rel="noopener noreferrer"
+            <button
+              type="button"
               className="btn btn-emerald"
-              style={{ width: '100%', opacity: canCheckout ? 1 : 0.5, pointerEvents: canCheckout ? 'auto' : 'none' }}
-              onClick={(e) => { if (!canCheckout) e.preventDefault() }}
+              style={{ width: '100%', opacity: canCheckout ? 1 : 0.5, cursor: canCheckout ? 'pointer' : 'not-allowed' }}
+              disabled={!canCheckout}
+              onClick={handleCheckout}
             >
-              {t('cart.checkout')}
-            </a>
+              {placing ? 'Placing order…' : t('cart.checkout')}
+            </button>
           </div>
           {items.length > 0 && (
             <button className="clear-link" onClick={clearCart}>{t('cart.clear')}</button>
