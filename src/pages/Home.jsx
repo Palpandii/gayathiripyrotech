@@ -12,14 +12,25 @@ import './Home.css'
 // Using names instead of IDs so this keeps working even if the
 // products table gets re-seeded and IDs change.
 const FEATURED_PRODUCT_NAMES = [
-  '240 shot Multicolour',
+  '4" Naruto Fancy (2pcs)',
   'Bada Peacock',
   'Musical Rocket',
   'Kulfi (3pcs)',
-  '4"Naruto Fancy (2Pcs)',
-  '3" Indiana(3Pcs)',
-  'Sizzling Star',
+  '10k wala',
+  'Madura Malli',
+  'Dasara 25 Shot',
   '50 Items (10Pcs)',
+]
+
+// Brand logos shown below the WhatsApp order section.
+// These files should already be sitting in the /public/brands folder —
+// rename the "src" paths and "name" labels below to match your actual files/brands.
+const BRAND_LOGOS = [
+  { src: '/brands/brand1.png', name: 'Brand 1' },
+  { src: '/brands/brand2.png', name: 'Brand 2' },
+  { src: '/brands/brand3.png', name: 'Brand 3' },
+  { src: '/brands/brand4.png', name: 'Brand 4' },
+  { src: '/brands/brand5.png', name: 'Brand 5' },
 ]
 
 export default function Home() {
@@ -112,6 +123,55 @@ export default function Home() {
             <a href={enquiryUrl} target="_blank" rel="noopener noreferrer" className="btn btn-gold">
               {t('cta.whatsapp')}
             </a>
+          </div>
+        </div>
+      </section>
+
+      <section className="home-section" style={{ paddingTop: 0 }}>
+        <div className="container">
+          <div
+            style={{
+              display: 'flex',
+              justifyContent: 'center',
+              gap: 16,
+              flexWrap: 'wrap',
+            }}
+          >
+            {BRAND_LOGOS.map((brand, i) => (
+              <div
+                key={i}
+                style={{
+                  background: '#f5f5f5',
+                  borderRadius: 12,
+                  padding: 12,
+                  width: 120,
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: 8,
+                }}
+              >
+                <div
+                  style={{
+                    width: 96,
+                    height: 96,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                >
+                  <img
+                    src={brand.src}
+                    alt={brand.name}
+                    style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }}
+                  />
+                </div>
+                <span style={{ fontSize: 13, fontWeight: 600, textAlign: 'center' }}>
+                  {brand.name}
+                </span>
+              </div>
+            ))}
           </div>
         </div>
       </section>
