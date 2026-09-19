@@ -103,13 +103,7 @@ export default function Hero() {
             </div>
           )}
 
-          <div className="hero-float-card">
-            <span className="icon-badge">✨</span>
-            <div>
-              <b>{t('home.statYears')} 9+</b>
-              <span>Trusted &amp; Certified</span>
-            </div>
-          </div>
+
         </div>
       </div>
     </section>
