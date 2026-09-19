@@ -5,6 +5,7 @@ import { useProducts } from '../hooks/useProducts.js'
 import { useCategories } from '../hooks/useCategories.js'
 import ProductCard from '../components/ProductCard.jsx'
 import QuantitySelector from '../components/QuantitySelector.jsx'
+import ProductVideo from '../components/ProductVideo.jsx'
 import { buildWhatsAppEnquiryUrl } from '../utils/whatsapp.js'
 import './ProductDetail.css'
 
@@ -56,6 +57,12 @@ export default function ProductDetail() {
               }}
             />
           </div>
+          {product.video_url && (
+            <div className="detail-video-file">
+              <p style={{ fontWeight: 700, marginBottom: 8 }}>{t('detail.video')}</p>
+              <ProductVideo key={product.video_url} src={product.video_url} />
+            </div>
+          )}
           {product.youtube_id && (
             <div className="detail-video">
               <p style={{ fontWeight: 700, marginBottom: 8 }}>{t('detail.video')}</p>

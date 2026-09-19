@@ -11,7 +11,7 @@ function normalizeProduct(p) {
         price: p.price,
         image: p.image || '',
         youtube_id: p.youtubeId ?? p.youtube_id ?? '',
-        inStock: (p.inStock ?? p.in_stock) !== false,
+        video_url: p.videoUrl ?? p.video_url ?? '',
     }
 }
 

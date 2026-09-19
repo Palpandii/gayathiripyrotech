@@ -116,6 +116,43 @@ export async function apiUpload(file) {
     return handle(res) // { url }
 }
 
+// Same endpoint as apiUpload, but reports progress (0-100). Used for videos,
+// which take long enough on a phone connection that people need to see it moving.
+export function apiUploadWithProgress(file, onProgress) {
+    return new Promise((resolve, reject) => {
+        const xhr = new XMLHttpRequest()
+        xhr.open('POST', `${API_BASE}/api/upload`)
+        const token = getToken()
+        if (token) xhr.setRequestHeader('Authorization', `Bearer ${token}`)
+
+        xhr.upload.onprogress = (e) => {
+            if (e.lengthComputable && onProgress) onProgress(Math.round((e.loaded / e.total) * 100))
+        }
+        xhr.onload = () => {
+            if (xhr.status === 401) {
+                clearToken()
+                return reject(new UnauthorizedError())
+            }
+            if (xhr.status === 413) return reject(new Error('File is too large for the server'))
+            if (xhr.status < 200 || xhr.status >= 300) {
+                let message = `Upload failed (${xhr.status})`
+                try { message = JSON.parse(xhr.responseText).error || message } catch { /* keep generic */ }
+                return reject(new Error(message))
+            }
+            try {
+                resolve(JSON.parse(xhr.responseText)) // { url }
+            } catch {
+                reject(new Error('Unexpected response from server'))
+            }
+        }
+        xhr.onerror = () => reject(new Error('Upload failed — check your internet connection (or the video may be too large)'))
+
+        const form = new FormData()
+        form.append('file', file)
+        xhr.send(form)
+    })
+}
+
 export async function apiLogin(password) {
     const res = await fetch(`${API_BASE}/api/admin/login`, {
         method: 'POST',

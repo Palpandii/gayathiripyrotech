@@ -1,11 +1,14 @@
 import { useEffect, useState, useCallback } from 'react'
-import { apiGet, apiSend, apiDelete, apiUpload, UnauthorizedError } from '../adminApi.js'
+import { apiGet, apiSend, apiDelete, apiUpload, apiUploadWithProgress, UnauthorizedError } from '../adminApi.js'
 import { useAdminAuth } from '../AdminAuthContext.jsx'
 import { extractYoutubeId, formatRupees } from '../utils/format.js'
+import ProductVideo from '../../components/ProductVideo.jsx'
+
+const MAX_VIDEO_MB = 50
 
 const BLANK_FORM = {
     id: null, category: '', nameEn: '', nameTa: '', qtyUnit: '',
-    mrp: '', price: '', image: '', youtubeId: '',
+    mrp: '', price: '', image: '', youtubeId: '', videoUrl: '',
 }
 
 export default function ProductsTab() {
@@ -17,6 +20,8 @@ export default function ProductsTab() {
     const [form, setForm] = useState(null) // null = form closed
     const [saving, setSaving] = useState(false)
     const [uploading, setUploading] = useState(false)
+    const [videoUploading, setVideoUploading] = useState(false)
+    const [videoProgress, setVideoProgress] = useState(0)
     const [search, setSearch] = useState('')
     const [togglingId, setTogglingId] = useState(null)
 
@@ -70,6 +75,37 @@ export default function ProductsTab() {
         }
     }
 
+    async function handleVideoChange(e) {
+        const input = e.target
+        const file = input.files?.[0]
+        if (!file) return
+        setError('')
+
+        if (!file.type.startsWith('video/')) {
+            setError('Please choose a video file.')
+            input.value = ''
+            return
+        }
+        if (file.size > MAX_VIDEO_MB * 1024 * 1024) {
+            setError(`Video is too big (max ${MAX_VIDEO_MB} MB). Trim it, or paste a YouTube link instead.`)
+            input.value = ''
+            return
+        }
+
+        setVideoUploading(true)
+        setVideoProgress(0)
+        try {
+            const { url } = await apiUploadWithProgress(file, setVideoProgress)
+            setForm((f) => ({ ...f, videoUrl: url }))
+        } catch (err) {
+            if (err instanceof UnauthorizedError) return handleUnauthorized()
+            setError('Video upload failed: ' + err.message)
+        } finally {
+            setVideoUploading(false)
+            input.value = ''
+        }
+    }
+
     async function handleSave(e) {
         e.preventDefault()
         setSaving(true)
@@ -84,6 +120,7 @@ export default function ProductsTab() {
                 price: form.price === '' ? null : Number(form.price),
                 image: form.image,
                 youtubeId: extractYoutubeId(form.youtubeId),
+                videoUrl: form.videoUrl || '',
             }
             if (form.id) {
                 await apiSend('PUT', `/api/products/${form.id}`, payload)
@@ -183,7 +220,11 @@ export default function ProductsTab() {
                                     <td data-label="Qty unit">{p.qtyUnit}</td>
                                     <td data-label="MRP">{formatRupees(p.mrp)}</td>
                                     <td data-label="Price">{formatRupees(p.price)}</td>
-                                    <td data-label="Video">{p.youtubeId ? '▶ Yes' : '—'}</td>
+                                    <td data-label="Video">
+                                        {p.videoUrl || p.youtubeId
+                                            ? [p.videoUrl && 'Video', p.youtubeId && 'YouTube'].filter(Boolean).map((v) => '▶ ' + v).join(' · ')
+                                            : '—'}
+                                    </td>
                                     <td data-label="Stock">
                                         <button
                                             type="button"
@@ -289,6 +330,39 @@ export default function ProductsTab() {
                             {uploading && <span>Uploading…</span>}
                         </div>
 
+                        <label>Product video from phone / gallery (optional)</label>
+                        <div className="admin-video-upload">
+                            {form.videoUrl && (
+                                <div className="admin-video-preview">
+                                    <ProductVideo key={form.videoUrl} src={form.videoUrl} />
+                                    <button
+                                        type="button"
+                                        className="btn-icon-danger"
+                                        onClick={() => setForm({ ...form, videoUrl: '' })}
+                                        disabled={videoUploading}
+                                    >
+                                        Remove video
+                                    </button>
+                                </div>
+                            )}
+                            <input
+                                type="file"
+                                accept="video/*"
+                                onChange={handleVideoChange}
+                                disabled={videoUploading}
+                            />
+                            {videoUploading ? (
+                                <div className="admin-progress" role="progressbar" aria-valuenow={videoProgress} aria-valuemin={0} aria-valuemax={100}>
+                                    <div className="admin-progress-bar" style={{ width: `${videoProgress}%` }} />
+                                    <span>Uploading video… {videoProgress}% (please wait, don't close)</span>
+                                </div>
+                            ) : (
+                                <small className="admin-hint">
+                                    {form.videoUrl ? 'Choose another file to replace it. ' : ''}Max {MAX_VIDEO_MB} MB.
+                                </small>
+                            )}
+                        </div>
+
                         <label>YouTube link (optional)</label>
                         <input
                             type="text"
@@ -299,7 +373,7 @@ export default function ProductsTab() {
 
                         <div className="admin-modal-actions">
                             <button type="button" className="btn-secondary" onClick={closeForm}>Cancel</button>
-                            <button type="submit" className="btn-primary" disabled={saving || uploading}>
+                            <button type="submit" className="btn-primary" disabled={saving || uploading || videoUploading}>
                                 {saving ? 'Saving…' : 'Save product'}
                             </button>
                         </div>
