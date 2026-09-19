@@ -88,6 +88,15 @@ export async function apiSend(method, path, body) {
     return handle(res)
 }
 
+// Shorthand JSON helpers — used by the Expenses / Purchase / Taxes tabs.
+export function apiPost(path, body) {
+    return apiSend('POST', path, body)
+}
+
+export function apiPut(path, body) {
+    return apiSend('PUT', path, body)
+}
+
 export async function apiSendForm(method, path, formData) {
     const res = await fetch(`${API_BASE}${path}`, {
         method,
