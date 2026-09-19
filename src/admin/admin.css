@@ -215,6 +215,73 @@
     font-weight: 600;
 }
 
+.admin-nav-link.active .admin-nav-icon {
+    background: linear-gradient(145deg, #ffffff, #ffe9f5);
+    color: var(--gold-deep);
+    box-shadow:
+        0 3px 0 rgba(196, 18, 122, 0.35),
+        inset 0 1px 0 rgba(255, 255, 255, 0.9),
+        0 4px 8px rgba(16, 10, 42, 0.25);
+}
+
+.admin-nav-group {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    margin-bottom: 10px;
+}
+
+.admin-nav-group-label {
+    font-size: 0.68rem;
+    text-transform: uppercase;
+    letter-spacing: 0.09em;
+    color: var(--sand-dim);
+    opacity: 0.5;
+    padding: 10px 12px 2px;
+}
+
+/* Each nav icon sits in a small raised "tile" — gradient fill + inset
+   highlight + drop shadow — to read as a glossy 3D badge rather than a flat
+   glyph, without pulling in a 3D/canvas library. */
+.admin-nav-icon {
+    width: 30px;
+    height: 30px;
+    flex-shrink: 0;
+    border-radius: 9px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(145deg, var(--panel), var(--ink-soft));
+    box-shadow:
+        0 2px 0 rgba(0, 0, 0, 0.25),
+        inset 0 1px 0 rgba(255, 255, 255, 0.08),
+        0 3px 6px rgba(0, 0, 0, 0.3);
+    transition: transform 0.15s ease;
+}
+
+.admin-nav-link:hover .admin-nav-icon {
+    transform: translateY(-1px) rotate(-3deg);
+}
+
+.admin-nav-text {
+    flex: 1;
+}
+
+.admin-nav-link.is-soon {
+    opacity: 0.55;
+}
+
+.admin-nav-soon {
+    font-size: 0.62rem;
+    font-weight: 700;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+    padding: 2px 6px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.12);
+    color: var(--sand-dim);
+}
+
 .admin-logout {
     background: transparent;
     border: 1px solid var(--panel-line);
@@ -767,8 +834,10 @@ button:disabled {
     }
 
     /* ---- Fixed bottom tab bar ---- */
+    /* 12 sections don't fit space-around on a phone anymore — scroll instead
+       of squeezing every label; the current tab is still one tap away. */
     .admin-bottom-nav {
-        display: flex;
+        display: block;
         position: fixed;
         bottom: 0;
         left: 0;
@@ -776,24 +845,55 @@ button:disabled {
         z-index: 60;
         background: var(--ink);
         border-top: 1px solid var(--panel-line);
-        padding: 6px 4px calc(6px + env(safe-area-inset-bottom));
-        justify-content: space-around;
+        padding-bottom: env(safe-area-inset-bottom);
+    }
+
+    .admin-bottom-nav-scroll {
+        display: flex;
+        overflow-x: auto;
+        scrollbar-width: none;
+        padding: 6px 8px;
+        gap: 2px;
+    }
+
+    .admin-bottom-nav-scroll::-webkit-scrollbar {
+        display: none;
     }
 
     .admin-bottom-nav .admin-nav-link {
-        flex: 1;
+        flex: 0 0 auto;
+        width: 60px;
         text-align: center;
-        font-size: 0.72rem;
-        padding: 8px 4px;
+        font-size: 0.62rem;
+        padding: 6px 2px;
         border-radius: var(--radius-s);
         position: relative;
+        flex-direction: column;
         justify-content: center;
+        gap: 3px;
+    }
+
+    .admin-bottom-nav .admin-nav-icon {
+        width: 26px;
+        height: 26px;
+    }
+
+    .admin-bottom-nav .admin-nav-text {
+        flex: none;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        max-width: 56px;
+    }
+
+    .admin-bottom-nav .admin-nav-soon {
+        display: none;
     }
 
     .admin-bottom-nav .admin-nav-badge {
         position: absolute;
         top: 0;
-        right: 4px;
+        right: 8px;
         min-width: 18px;
         height: 18px;
         padding: 0 5px;
@@ -843,4 +943,289 @@ button:disabled {
 .banner-slot-actions button {
     flex: 1;
     min-width: 70px;
+}
+
+/* ===========================================================
+   Dashboard / Reports — KPI cards use a layered gradient +
+   deep shadow to feel raised/tactile ("3D") rather than flat.
+=========================================================== */
+
+.admin-kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 16px;
+    margin-bottom: 24px;
+}
+
+.admin-kpi-card {
+    position: relative;
+    border-radius: var(--radius-m);
+    padding: 20px 22px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    color: #fff;
+    overflow: hidden;
+    box-shadow:
+        0 10px 0 rgba(16, 10, 42, 0.18),
+        0 20px 34px -16px rgba(16, 10, 42, 0.55),
+        inset 0 1px 0 rgba(255, 255, 255, 0.25);
+    transform: translateZ(0);
+    transition: transform 0.18s ease, box-shadow 0.18s ease;
+}
+
+.admin-kpi-card:hover {
+    transform: translateY(-3px);
+    box-shadow:
+        0 13px 0 rgba(16, 10, 42, 0.18),
+        0 26px 40px -16px rgba(16, 10, 42, 0.6),
+        inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+
+.admin-kpi-card::after {
+    content: '';
+    position: absolute;
+    top: -40%;
+    right: -20%;
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.18);
+    filter: blur(2px);
+}
+
+.admin-kpi-gold {
+    background: linear-gradient(145deg, var(--gold), var(--gold-deep));
+}
+
+.admin-kpi-ember {
+    background: linear-gradient(145deg, var(--ember), var(--ember-deep));
+}
+
+.admin-kpi-emerald {
+    background: linear-gradient(145deg, var(--emerald), var(--emerald-deep));
+}
+
+.admin-kpi-violet {
+    background: linear-gradient(145deg, var(--spark-violet), #5A32C4);
+}
+
+.admin-kpi-rose {
+    background: linear-gradient(145deg, var(--spark-rose), var(--spark-rose-2));
+}
+
+.admin-kpi-label {
+    font-size: 0.78rem;
+    opacity: 0.85;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.admin-kpi-value {
+    font-size: 1.6rem;
+    font-weight: 700;
+}
+
+.admin-kpi-link {
+    color: #fff;
+    font-weight: 700;
+    text-decoration: underline;
+}
+
+.admin-report-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 18px;
+}
+
+.admin-report-card {
+    background: var(--panel);
+    border: 1px solid var(--panel-line);
+    border-radius: var(--radius-m);
+    padding: 20px;
+    box-shadow: var(--shadow-soft);
+    margin-bottom: 18px;
+    color: var(--sand);
+}
+
+.admin-report-card h3 {
+    margin: 0 0 14px;
+    font-size: 1rem;
+    color: var(--sand);
+}
+
+.admin-report-card .admin-table {
+    color: var(--ink-text);
+    background: var(--sand);
+    border-radius: var(--radius-s);
+    overflow: hidden;
+}
+
+/* Horizontal bar chart — top-selling products */
+.admin-hbar-chart {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.admin-hbar-row {
+    display: grid;
+    grid-template-columns: 120px 1fr 40px;
+    align-items: center;
+    gap: 10px;
+}
+
+.admin-hbar-label {
+    font-size: 0.82rem;
+    color: var(--sand-dim);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.admin-hbar-track {
+    height: 14px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.08);
+    overflow: hidden;
+}
+
+.admin-hbar-fill {
+    height: 100%;
+    border-radius: 999px;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35);
+    transition: width 0.4s ease;
+}
+
+.admin-hbar-value {
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--sand);
+    text-align: right;
+}
+
+/* Vertical bar chart — sales trend */
+.admin-vbar-chart {
+    display: flex;
+    align-items: flex-end;
+    gap: 6px;
+    height: 160px;
+}
+
+.admin-vbar-col {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    align-items: center;
+    height: 100%;
+    gap: 6px;
+}
+
+.admin-vbar-fill {
+    width: 100%;
+    max-width: 18px;
+    min-height: 2px;
+    border-radius: 4px 4px 0 0;
+    background: linear-gradient(180deg, var(--gold), var(--gold-deep));
+    box-shadow: 0 -2px 6px rgba(255, 61, 166, 0.35);
+}
+
+.admin-vbar-label {
+    font-size: 0.62rem;
+    color: var(--sand-dim);
+    transform: rotate(-40deg);
+    transform-origin: top center;
+    white-space: nowrap;
+}
+
+/* Status badges (Dashboard recent-orders table) */
+.admin-status {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 999px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: capitalize;
+}
+
+.admin-status-pending {
+    background: rgba(255, 179, 0, 0.18);
+    color: #b8860b;
+}
+
+.admin-status-confirmed {
+    background: rgba(46, 123, 255, 0.18);
+    color: #2E7BFF;
+}
+
+.admin-status-packed {
+    background: rgba(124, 77, 255, 0.18);
+    color: #7C4DFF;
+}
+
+.admin-status-shipped {
+    background: rgba(20, 198, 244, 0.18);
+    color: #0D93BA;
+}
+
+.admin-status-delivered {
+    background: rgba(31, 227, 180, 0.18);
+    color: #109E7C;
+}
+
+.admin-status-cancelled {
+    background: rgba(255, 59, 78, 0.18);
+    color: #C41E31;
+}
+
+/* "Coming soon" placeholder page */
+.admin-soon-card {
+    background: var(--panel);
+    border: 1px dashed var(--panel-line);
+    border-radius: var(--radius-m);
+    padding: 40px 24px;
+    text-align: center;
+    color: var(--sand-dim);
+}
+
+.admin-soon-badge {
+    display: inline-block;
+    padding: 6px 16px;
+    border-radius: 999px;
+    background: linear-gradient(145deg, var(--gold), var(--gold-deep));
+    color: #fff;
+    font-weight: 700;
+    font-size: 0.8rem;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+    box-shadow: 0 8px 20px -8px rgba(196, 18, 122, 0.6);
+}
+
+/* ===========================================================
+   Phase 2 — Finance (Expenses / Purchase / Taxes) status badges.
+   Reuses the .admin-status base class from Dashboard; these are
+   just the payment/filing states those three modules need that
+   the order-status set above doesn't already cover.
+=========================================================== */
+.admin-status-paid {
+    background: rgba(31, 227, 180, 0.18);
+    color: #109E7C;
+}
+
+.admin-status-unpaid {
+    background: rgba(255, 59, 78, 0.18);
+    color: #C41E31;
+}
+
+.admin-status-partial {
+    background: rgba(255, 179, 0, 0.18);
+    color: #b8860b;
+}
+
+.admin-status-overdue {
+    background: rgba(255, 59, 78, 0.24);
+    color: #C41E31;
+    font-weight: 800;
 }

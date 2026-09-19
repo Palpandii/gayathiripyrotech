@@ -4,6 +4,9 @@ import { useAdminAuth } from './AdminAuthContext.jsx'
 import { apiGet, UnauthorizedError } from './adminApi.js'
 import { Icons } from './AdminIcons.jsx'
 
+// Full planned sidebar, in the order the shop wants it. `soon: true` items
+// route to a placeholder page — they're on the build list but not wired to
+// real data yet, so the structure is visible today without faking data.
 const NAV_GROUPS = [
     {
         label: 'Overview',
@@ -32,9 +35,9 @@ const NAV_GROUPS = [
     {
         label: 'Finance',
         items: [
-            { to: '/admin/expenses', label: 'Expenses', icon: 'expenses', soon: true },
-            { to: '/admin/purchase', label: 'Purchase', icon: 'purchase', soon: true },
-            { to: '/admin/taxes', label: 'Taxes', icon: 'taxes', soon: true },
+            { to: '/admin/expenses', label: 'Expenses', icon: 'expenses' },
+            { to: '/admin/purchase', label: 'Purchase', icon: 'purchase' },
+            { to: '/admin/taxes', label: 'Taxes', icon: 'taxes' },
         ],
     },
     {
@@ -47,6 +50,9 @@ const NAV_GROUPS = [
 
 const TABS = NAV_GROUPS.flatMap((g) => g.items)
 
+// New-order badge: an order counts as "new" while it is still PENDING and its id
+// is higher than the last id the admin saw on the Orders page. Opening the
+// Orders tab clears the badge (like opening a chat clears unread messages).
 const SEEN_KEY = 'as_admin_orders_last_seen_id'
 const POLL_MS = 30000
 
@@ -79,6 +85,7 @@ export default function AdminLayout() {
         }
     }, [logout])
 
+    // Load once, then check for new orders every 30s (and when the tab is opened again).
     useEffect(() => {
         reloadOrders()
         const timer = setInterval(() => {
@@ -109,6 +116,7 @@ export default function AdminLayout() {
         }
     }, [maxOrderId, lastSeenId])
 
+    // Browser tab title shows the count too, e.g. "(2) New orders".
     useEffect(() => {
         const original = document.title
         if (newOrderCount > 0) document.title = `(${newOrderCount}) New orders — Admin`

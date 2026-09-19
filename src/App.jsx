@@ -24,6 +24,9 @@ import DashboardTab from './admin/pages/DashboardTab.jsx'
 import ReportsTab from './admin/pages/ReportsTab.jsx'
 import CustomersTab from './admin/pages/CustomersTab.jsx'
 import ComingSoonTab from './admin/pages/ComingSoonTab.jsx'
+import ExpensesTab from './admin/pages/ExpensesTab.jsx'
+import PurchaseTab from './admin/pages/PurchaseTab.jsx'
+import TaxesTab from './admin/pages/TaxesTab.jsx'
 
 
 function Storefront() {
@@ -68,9 +71,9 @@ function AdminSection() {
           <Route path="customers" element={<CustomersTab />} />
           <Route path="categories" element={<CategoriesTab />} />
           <Route path="banner" element={<BannerTab />} />
-          <Route path="expenses" element={<ComingSoonTab title="Expenses" />} />
-          <Route path="purchase" element={<ComingSoonTab title="Purchase" />} />
-          <Route path="taxes" element={<ComingSoonTab title="Taxes" />} />
+          <Route path="expenses" element={<ExpensesTab />} />
+          <Route path="purchase" element={<PurchaseTab />} />
+          <Route path="taxes" element={<TaxesTab />} />
           <Route path="payments" element={<ComingSoonTab title="Payments" />} />
           <Route path="users" element={<ComingSoonTab title="Users" />} />
         </Route>
