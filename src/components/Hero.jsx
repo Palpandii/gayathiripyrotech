@@ -41,6 +41,22 @@ export default function Hero() {
           </span>
           <h1>{t('home.heroTitle')}</h1>
           <p className="sub">{t('home.heroSub')}</p>
+
+          <p
+            style={{
+              background: '#fff3cd',
+              color: '#7a5c00',
+              fontWeight: 700,
+              padding: '8px 14px',
+              borderRadius: 8,
+              display: 'inline-block',
+              fontSize: 14,
+              marginBottom: 12,
+            }}
+          >
+            ⚠️ Minimum Order: ₹3000
+          </p>
+
           <div className="hero-ctas">
             <Link to="/products" className="btn btn-gold">{t('home.heroCta1')}</Link>
             <Link to="/categories" className="btn btn-ghost">{t('home.heroCta2')}</Link>
@@ -102,8 +118,6 @@ export default function Hero() {
               ))}
             </div>
           )}
-
-
         </div>
       </div>
     </section>
