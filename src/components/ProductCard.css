@@ -222,3 +222,26 @@
 .product-card .add-btn:active {
   transform: translateY(0);
 }
+
+.oos-badge {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  background: #dc2626;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 20px;
+  z-index: 2;
+}
+
+.product-card.out-of-stock .thumb-wrap img {
+  opacity: 0.5;
+}
+
+.add-btn-disabled {
+  background: #9ca3af !important;
+  cursor: not-allowed !important;
+  opacity: 0.7;
+}

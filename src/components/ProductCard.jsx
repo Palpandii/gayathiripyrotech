@@ -12,7 +12,11 @@ export default function ProductCard({ product }) {
   const name = pickField(product, 'name')
   const playClick = useClickSound()
 
+  // Handles either camelCase or snake_case field naming from the API
+  const outOfStock = product.inStock === false || product.in_stock === false
+
   const handleAdd = () => {
+    if (outOfStock) return
     playClick()
     setQty(product, 1)
   }
@@ -32,9 +36,10 @@ export default function ProductCard({ product }) {
     : 0
 
   return (
-    <div className="product-card">
+    <div className={`product-card${outOfStock ? ' out-of-stock' : ''}`}>
       <Link to={`/product/${product.id}`} className="thumb-wrap">
-        {discountPct > 0 && <span className="discount-badge">{discountPct}% OFF</span>}
+        {discountPct > 0 && !outOfStock && <span className="discount-badge">{discountPct}% OFF</span>}
+        {outOfStock && <span className="oos-badge">{t('product.outOfStock') || 'Out of Stock'}</span>}
         <ImageWithFallback src={product.image} alt={name} />
         {product.youtube_id && (
           <span className="yt-badge" aria-label="Has video">
@@ -53,7 +58,11 @@ export default function ProductCard({ product }) {
         </div>
 
         <div className="footer-row">
-          {qty === 0 ? (
+          {outOfStock ? (
+            <button className="add-btn add-btn-disabled" disabled>
+              {t('product.outOfStock') || 'Out of Stock'}
+            </button>
+          ) : qty === 0 ? (
             <button className="add-btn" onClick={handleAdd}>{t('cta.addToCart')}</button>
           ) : (
             <QuantitySelector

@@ -106,6 +106,7 @@ export const translations = {
     'cart.addressLabel': 'Delivery Address',
     'cart.addressPlaceholder': 'House no, street, area, landmark',
     'cart.unlockDelivery': 'Add ₹{amount} more to unlock delivery',
+    'product.outOfStock': 'Out of Stock',      // English
   },
   ta: {
     'top.tagline': 'சிறந்த ஃபேன்சி கிரக்கர்ஸ், மத்தாப்பு மற்றும் பரிசுப் பெட்டிகள் மொத்த & சில்லறை விற்பனை',
@@ -214,6 +215,7 @@ export const translations = {
     'cart.addressLabel': 'டெலிவரி முகவரி',
     'cart.addressPlaceholder': 'வீட்டு எண், தெரு, ஏரியா, லேண்ட்மார்க்',
     'cart.unlockDelivery': 'டெலிவரி பெற ₹{amount} இன்னும் சேர்க்கவும்',
+    'product.outOfStock': 'கையிருப்பு இல்லை',   // Tamil
   },
 }
 
