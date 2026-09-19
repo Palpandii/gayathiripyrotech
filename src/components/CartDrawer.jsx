@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { useLanguage } from '../context/LanguageContext.jsx'
 import { useCart } from '../hooks/useCart.js'
 import { buildWhatsAppOrderUrl } from '../utils/whatsapp.js'
@@ -6,6 +6,25 @@ import { API_BASE } from '../data/api.js'
 import './CartDrawer.css'
 
 const MIN_ORDER_FOR_DELIVERY = 3000
+
+// Saves the order in the backend so it shows up in the admin Orders tab.
+// Fire-and-forget: if this fails, the WhatsApp order must still go through.
+function saveOrderToBackend(payload) {
+  try {
+    fetch(`${API_BASE}/api/orders`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+      keepalive: true,
+    })
+      .then((res) => {
+        if (!res.ok) console.warn('Order save failed:', res.status)
+      })
+      .catch((err) => console.warn('Order save failed:', err))
+  } catch (err) {
+    console.warn('Order save failed:', err)
+  }
+}
 
 export default function CartDrawer() {
   const { t, pickField, lang } = useLanguage()
@@ -15,8 +34,9 @@ export default function CartDrawer() {
   const [customerPhone, setCustomerPhone] = useState('')
   const [deliveryAddress, setDeliveryAddress] = useState('')
   const [fulfillment, setFulfillment] = useState('pickup')
-  const [placing, setPlacing] = useState(false)
-  const [placeError, setPlaceError] = useState('')
+
+  // Guards against double-click creating duplicate orders
+  const lastSavedRef = useRef({ key: '', time: 0 })
 
   if (!isOpen) return null
 
@@ -33,7 +53,7 @@ export default function CartDrawer() {
     (effectiveFulfillment === 'delivery' && deliveryAddress.trim() === '')
     : customerPhone.trim() === ''
 
-  const canCheckout = items.length > 0 && !detailsMissing && !placing
+  const canCheckout = items.length > 0 && !detailsMissing
 
   const whatsappUrl = buildWhatsAppOrderUrl(items, totalPrice, lang, {
     customerName,
@@ -42,47 +62,33 @@ export default function CartDrawer() {
     deliveryAddress: effectiveFulfillment === 'delivery' ? deliveryAddress : '',
   })
 
-  async function handleCheckout(e) {
-    e.preventDefault()
-    if (!canCheckout) return
+  function handleCheckoutClick(e) {
+    if (!canCheckout) {
+      e.preventDefault()
+      return
+    }
 
-    setPlacing(true)
-    setPlaceError('')
-
-    const orderPayload = {
-      customerName: customerName.trim() || 'Walk-in / Pickup customer',
+    const payload = {
+      customerName: customerName.trim() || 'WhatsApp Customer',
       customerPhone: customerPhone.trim(),
-      customerAddress: effectiveFulfillment === 'delivery' ? deliveryAddress.trim() : (effectiveFulfillment === 'pickup' ? 'Store pickup' : ''),
-      status: 'PENDING',
+      customerAddress: effectiveFulfillment === 'delivery' ? deliveryAddress.trim() : 'Store pickup',
       totalAmount: totalPrice,
       items: items.map((item) => ({
         productId: item.id,
-        productName: item.name_en || pickField(item, 'name'),
+        productName: item.name_en,
         quantity: item.qty,
         unitPrice: item.price,
       })),
     }
 
-    try {
-      const res = await fetch(`${API_BASE}/api/orders`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(orderPayload),
-      })
-      if (!res.ok) throw new Error(`Order save failed (${res.status})`)
+    const key = JSON.stringify(payload)
+    const now = Date.now()
+    const last = lastSavedRef.current
+    if (last.key === key && now - last.time < 30000) return // same order just saved
+    lastSavedRef.current = { key, time: now }
 
-      // Order saved to admin panel — now hand off to WhatsApp
-      window.open(whatsappUrl, '_blank', 'noopener,noreferrer')
-      clearCart()
-      setIsOpen(false)
-    } catch (err) {
-      // Even if saving to admin fails, don't block the customer from
-      // reaching WhatsApp — just flag it so the mismatch can be noticed.
-      setPlaceError(err.message)
-      window.open(whatsappUrl, '_blank', 'noopener,noreferrer')
-    } finally {
-      setPlacing(false)
-    }
+    // Do NOT preventDefault — the link must still open WhatsApp normally.
+    saveOrderToBackend(payload)
   }
 
   return (
@@ -197,21 +203,17 @@ export default function CartDrawer() {
               {t('cart.fillDetails')}
             </p>
           )}
-          {placeError && (
-            <p className="cart-details-hint" style={{ fontSize: 12, color: '#dc2626', margin: '0 0 8px' }}>
-              Order couldn't be saved to admin panel, but your WhatsApp message was sent.
-            </p>
-          )}
           <div className="actions">
-            <button
-              type="button"
+            <a
+              href={whatsappUrl}
+              target="_blank"
+              rel="noopener noreferrer"
               className="btn btn-emerald"
-              style={{ width: '100%', opacity: canCheckout ? 1 : 0.5, cursor: canCheckout ? 'pointer' : 'not-allowed' }}
-              disabled={!canCheckout}
-              onClick={handleCheckout}
+              style={{ width: '100%', opacity: canCheckout ? 1 : 0.5, pointerEvents: canCheckout ? 'auto' : 'none' }}
+              onClick={handleCheckoutClick}
             >
-              {placing ? 'Placing order…' : t('cart.checkout')}
-            </button>
+              {t('cart.checkout')}
+            </a>
           </div>
           {items.length > 0 && (
             <button className="clear-link" onClick={clearCart}>{t('cart.clear')}</button>
