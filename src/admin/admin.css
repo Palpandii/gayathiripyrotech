@@ -709,39 +709,114 @@ button:disabled {
    MOBILE — sticky top bar + fixed bottom tab nav + card-style tables
 =========================================================== */
 
-.admin-bottom-nav {
+.admin-mobile-bar,
+.admin-dock,
+.admin-sheet,
+.admin-sheet-backdrop {
     display: none;
 }
 
 @media (max-width: 800px) {
     .admin-shell {
         flex-direction: column;
-        padding-bottom: 70px;
-        /* space for fixed bottom nav */
+        /* room for the floating dock (64px) + its gap + phone home-bar */
+        padding-bottom: calc(92px + env(safe-area-inset-bottom));
     }
 
-    /* ---- Top bar: brand + logout only ---- */
+    /* ---- Desktop sidebar is replaced by top bar + dock on phones ---- */
     .admin-sidebar {
-        width: 100%;
-        height: auto;
-        position: sticky;
-        top: 0;
-        z-index: 50;
-        flex-direction: row;
-        align-items: center;
-        justify-content: space-between;
-        padding: 14px 16px;
-        gap: 12px;
-        box-shadow: 0 4px 14px -6px rgba(0, 0, 0, 0.35);
-    }
-
-    .admin-desktop-nav {
         display: none;
     }
 
-    .admin-logout {
-        padding: 8px 14px;
-        font-size: 0.82rem;
+    /* ---- Top bar ---- */
+    .admin-mobile-bar {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        position: sticky;
+        top: 0;
+        z-index: 50;
+        padding: 12px 16px;
+        padding-top: calc(12px + env(safe-area-inset-top));
+        background: var(--ink);
+        box-shadow: 0 12px 24px -16px rgba(0, 0, 0, 0.7);
+    }
+
+    /* thin accent line under the bar */
+    .admin-mobile-bar::after {
+        content: '';
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        height: 2px;
+        background: linear-gradient(90deg, var(--gold, #ff3ba0), #7c4dff 60%, transparent);
+        opacity: 0.85;
+    }
+
+    .admin-mobile-mark {
+        width: 40px;
+        height: 40px;
+        flex-shrink: 0;
+        border-radius: 13px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 800;
+        font-size: 0.95rem;
+        letter-spacing: 0.02em;
+        color: #fff;
+        background: linear-gradient(145deg, var(--gold, #ff3ba0), #7c4dff);
+        box-shadow:
+            0 3px 0 rgba(0, 0, 0, 0.3),
+            inset 0 1px 0 rgba(255, 255, 255, 0.4),
+            0 6px 14px -4px rgba(255, 59, 160, 0.5);
+    }
+
+    .admin-mobile-titles {
+        flex: 1;
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+    }
+
+    .admin-mobile-name {
+        color: var(--sand);
+        font-weight: 700;
+        font-size: 1rem;
+        line-height: 1.15;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .admin-mobile-sub {
+        color: var(--gold, #ff3ba0);
+        font-size: 0.7rem;
+        font-weight: 600;
+        letter-spacing: 0.07em;
+        text-transform: uppercase;
+    }
+
+    .admin-mobile-logout {
+        width: 42px;
+        height: 42px;
+        flex-shrink: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        border: 1px solid var(--panel-line);
+        background: rgba(255, 255, 255, 0.04);
+        color: var(--sand-dim);
+        cursor: pointer;
+    }
+
+    .admin-mobile-logout:active {
+        background: rgba(255, 59, 48, 0.15);
+        color: #ff6b6b;
+        border-color: rgba(255, 59, 48, 0.4);
     }
 
     .admin-content {
@@ -852,72 +927,327 @@ button:disabled {
         box-shadow: var(--shadow-soft);
     }
 
-    /* ---- Fixed bottom tab bar ---- */
-    /* 12 sections don't fit space-around on a phone anymore — scroll instead
-       of squeezing every label; the current tab is still one tap away. */
-    .admin-bottom-nav {
-        display: block;
-        position: fixed;
-        bottom: 0;
-        left: 0;
-        right: 0;
-        z-index: 60;
-        background: var(--ink);
-        border-top: 1px solid var(--panel-line);
-        padding-bottom: env(safe-area-inset-bottom);
-    }
-
-    .admin-bottom-nav-scroll {
+    /* ---- Floating bottom dock: 4 daily tabs + More ---- */
+    .admin-dock {
         display: flex;
-        overflow-x: auto;
-        scrollbar-width: none;
-        padding: 6px 8px;
-        gap: 2px;
+        gap: 4px;
+        position: fixed;
+        left: 12px;
+        right: 12px;
+        bottom: calc(12px + env(safe-area-inset-bottom));
+        z-index: 60;
+        padding: 8px;
+        border-radius: 28px;
+        background: var(--ink);
+        border: 1px solid var(--panel-line);
+        box-shadow:
+            0 18px 40px -12px rgba(8, 4, 28, 0.75),
+            0 0 0 1px rgba(255, 255, 255, 0.03) inset;
     }
 
-    .admin-bottom-nav-scroll::-webkit-scrollbar {
-        display: none;
-    }
-
-    .admin-bottom-nav .admin-nav-link {
-        flex: 0 0 auto;
-        width: 60px;
-        text-align: center;
-        font-size: 0.62rem;
-        padding: 6px 2px;
-        border-radius: var(--radius-s);
-        position: relative;
-        flex-direction: column;
+    .admin-dock-item {
+        flex: 1 1 0;
+        min-width: 0;
+        height: 50px;
+        display: flex;
+        align-items: center;
         justify-content: center;
-        gap: 3px;
+        gap: 6px;
+        padding: 0 6px;
+        border: 0;
+        border-radius: 21px;
+        background: transparent;
+        color: var(--sand-dim);
+        font: inherit;
+        text-decoration: none;
+        cursor: pointer;
+        -webkit-tap-highlight-color: transparent;
+        transition: flex-grow 0.3s ease, background 0.25s ease, color 0.2s ease, box-shadow 0.25s ease;
     }
 
-    .admin-bottom-nav .admin-nav-icon {
-        width: 26px;
-        height: 26px;
+    .admin-dock-item:active {
+        transform: scale(0.96);
     }
 
-    .admin-bottom-nav .admin-nav-text {
-        flex: none;
-        white-space: nowrap;
+    .admin-dock-item.is-current {
+        flex-grow: 2.4;
+        color: #fff;
+        background: linear-gradient(135deg, var(--gold, #ff3ba0), var(--gold-deep, #c4127a));
+        box-shadow:
+            0 8px 18px -8px rgba(255, 59, 160, 0.75),
+            inset 0 1px 0 rgba(255, 255, 255, 0.35);
+    }
+
+    .admin-dock-icon {
+        position: relative;
+        display: flex;
+        flex-shrink: 0;
+    }
+
+    .admin-dock-icon svg {
+        width: 23px;
+        height: 23px;
+    }
+
+    .admin-dock-label {
+        max-width: 0;
+        opacity: 0;
         overflow: hidden;
+        white-space: nowrap;
         text-overflow: ellipsis;
-        max-width: 56px;
+        font-size: 0.8rem;
+        font-weight: 700;
+        transition: max-width 0.3s ease, opacity 0.2s ease;
     }
 
-    .admin-bottom-nav .admin-nav-soon {
-        display: none;
+    .admin-dock-item.is-current .admin-dock-label {
+        max-width: 86px;
+        opacity: 1;
     }
 
-    .admin-bottom-nav .admin-nav-badge {
+    .admin-dock-badge {
+        box-sizing: border-box;
         position: absolute;
-        top: 0;
-        right: 8px;
+        top: -7px;
+        right: -9px;
         min-width: 18px;
         height: 18px;
         padding: 0 5px;
+        border-radius: 999px;
+        background: #ff3b30;
+        color: #fff;
         font-size: 0.66rem;
+        font-weight: 700;
+        line-height: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
         box-shadow: 0 0 0 2px var(--ink);
+        animation: admin-badge-pulse 1.6s ease-in-out infinite;
+    }
+
+    /* ---- "More" bottom sheet ---- */
+    .admin-sheet-backdrop {
+        display: block;
+        position: fixed;
+        inset: 0;
+        z-index: 80;
+        background: rgba(6, 3, 20, 0.62);
+        backdrop-filter: blur(3px);
+        -webkit-backdrop-filter: blur(3px);
+        animation: admin-fade 0.2s ease both;
+    }
+
+    .admin-sheet {
+        display: flex;
+        flex-direction: column;
+        position: fixed;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        z-index: 90;
+        max-height: 86vh;
+        max-height: 86dvh;
+        background: var(--ink);
+        color: var(--sand);
+        border-radius: 28px 28px 0 0;
+        border-top: 1px solid var(--panel-line);
+        box-shadow: 0 -20px 50px -10px rgba(0, 0, 0, 0.65);
+        padding-bottom: calc(16px + env(safe-area-inset-bottom));
+        animation: admin-sheet-up 0.3s cubic-bezier(0.2, 0.9, 0.3, 1) both;
+    }
+
+    .admin-sheet-handle {
+        width: 42px;
+        height: 4px;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.2);
+        margin: 10px auto 2px;
+        flex-shrink: 0;
+    }
+
+    .admin-sheet-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 8px 20px 10px;
+        flex-shrink: 0;
+    }
+
+    .admin-sheet-head strong {
+        display: block;
+        font-size: 1.15rem;
+        font-weight: 800;
+    }
+
+    .admin-sheet-head span {
+        display: block;
+        margin-top: 2px;
+        font-size: 0.78rem;
+        color: var(--sand-dim);
+        opacity: 0.75;
+    }
+
+    .admin-sheet-close {
+        width: 38px;
+        height: 38px;
+        flex-shrink: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        border: 1px solid var(--panel-line);
+        background: rgba(255, 255, 255, 0.05);
+        color: var(--sand);
+        cursor: pointer;
+    }
+
+    .admin-sheet-body {
+        flex: 1;
+        min-height: 0;
+        overflow-y: auto;
+        overscroll-behavior: contain;
+        padding: 0 16px 6px;
+    }
+
+    .admin-sheet-group h4 {
+        margin: 14px 4px 8px;
+        font-size: 0.68rem;
+        font-weight: 700;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: var(--sand-dim);
+        opacity: 0.6;
+    }
+
+    .admin-sheet-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 10px;
+    }
+
+    .admin-sheet-tile {
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 8px;
+        padding: 14px 6px 12px;
+        border-radius: 18px;
+        border: 1px solid var(--panel-line);
+        background: rgba(255, 255, 255, 0.04);
+        color: var(--sand);
+        text-decoration: none;
+        text-align: center;
+        font-size: 0.78rem;
+        font-weight: 600;
+        -webkit-tap-highlight-color: transparent;
+    }
+
+    .admin-sheet-tile:active {
+        transform: scale(0.96);
+    }
+
+    .admin-sheet-tile-icon {
+        position: relative;
+        width: 46px;
+        height: 46px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 15px;
+        background: linear-gradient(145deg, var(--panel), var(--ink-soft));
+        box-shadow:
+            0 2px 0 rgba(0, 0, 0, 0.25),
+            inset 0 1px 0 rgba(255, 255, 255, 0.1),
+            0 4px 8px rgba(0, 0, 0, 0.3);
+    }
+
+    .admin-sheet-tile-icon svg {
+        width: 22px;
+        height: 22px;
+    }
+
+    .admin-sheet-tile.is-current {
+        color: #fff;
+        border-color: transparent;
+        background: linear-gradient(135deg, var(--gold, #ff3ba0), var(--gold-deep, #c4127a));
+        box-shadow: 0 10px 20px -10px rgba(255, 59, 160, 0.7);
+    }
+
+    .admin-sheet-tile.is-current .admin-sheet-tile-icon {
+        background: linear-gradient(145deg, #ffffff, #ffe9f5);
+        color: var(--gold-deep, #c4127a);
+    }
+
+    .admin-sheet-tile.is-soon {
+        opacity: 0.5;
+    }
+
+    .admin-sheet-soon {
+        position: absolute;
+        top: 6px;
+        right: 6px;
+        padding: 2px 6px;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.14);
+        font-style: normal;
+        font-size: 0.55rem;
+        font-weight: 700;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+    }
+
+    .admin-sheet-logout {
+        flex-shrink: 0;
+        margin: 8px 16px 0;
+        padding: 14px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        border-radius: 16px;
+        border: 1px solid rgba(255, 80, 80, 0.35);
+        background: rgba(255, 59, 48, 0.08);
+        color: #ff6b6b;
+        font: inherit;
+        font-weight: 700;
+        cursor: pointer;
+    }
+
+    @keyframes admin-fade {
+        from {
+            opacity: 0;
+        }
+
+        to {
+            opacity: 1;
+        }
+    }
+
+    @keyframes admin-sheet-up {
+        from {
+            transform: translateY(100%);
+        }
+
+        to {
+            transform: none;
+        }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+
+        .admin-sheet,
+        .admin-sheet-backdrop,
+        .admin-dock-badge {
+            animation: none;
+        }
+
+        .admin-dock-item,
+        .admin-dock-label {
+            transition: none;
+        }
     }
 }
 

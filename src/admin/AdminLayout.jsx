@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { NavLink, Outlet, useNavigate } from 'react-router-dom'
+import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { useAdminAuth } from './AdminAuthContext.jsx'
 import { apiGet, UnauthorizedError } from './adminApi.js'
 import { Icons } from './AdminIcons.jsx'
@@ -50,6 +50,25 @@ const NAV_GROUPS = [
 
 const TABS = NAV_GROUPS.flatMap((g) => g.items)
 
+// Phone layout: only the 4 things used every day live in the bottom dock;
+// everything else is one tap away in the "More" sheet (grouped like the desktop sidebar).
+const DOCK_PATHS = ['/admin/dashboard', '/admin/orders', '/admin/products', '/admin/reports']
+const DOCK_TABS = DOCK_PATHS.map((to) => TABS.find((t) => t.to === to))
+
+const svgProps = {
+    width: 22, height: 22, viewBox: '0 0 24 24', fill: 'none',
+    stroke: 'currentColor', strokeWidth: 1.9, strokeLinecap: 'round', strokeLinejoin: 'round',
+}
+const MoreIcon = () => (
+    <svg {...svgProps}><circle cx="5" cy="12" r="1.6" /><circle cx="12" cy="12" r="1.6" /><circle cx="19" cy="12" r="1.6" /></svg>
+)
+const LogoutIcon = () => (
+    <svg {...svgProps}><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" /><path d="m16 17 5-5-5-5" /><path d="M21 12H9" /></svg>
+)
+const CloseIcon = () => (
+    <svg {...svgProps}><path d="M6 6l12 12M18 6 6 18" /></svg>
+)
+
 // New-order badge: an order counts as "new" while it is still PENDING and its id
 // is higher than the last id the admin saw on the Orders page. Opening the
 // Orders tab clears the badge (like opening a chat clears unread messages).
@@ -63,11 +82,13 @@ function readLastSeen() {
 export default function AdminLayout() {
     const { logout } = useAdminAuth()
     const navigate = useNavigate()
+    const location = useLocation()
 
     const [orders, setOrders] = useState([])
     const [ordersLoading, setOrdersLoading] = useState(true)
     const [ordersError, setOrdersError] = useState('')
     const [lastSeenId, setLastSeenId] = useState(readLastSeen)
+    const [menuOpen, setMenuOpen] = useState(false)
 
     const reloadOrders = useCallback(async ({ silent = false } = {}) => {
         if (!silent) {
@@ -123,13 +144,47 @@ export default function AdminLayout() {
         return () => { document.title = original }
     }, [newOrderCount])
 
+    // Close the phone menu whenever the page changes.
+    useEffect(() => { setMenuOpen(false) }, [location.pathname])
+
+    // While the menu sheet is open: Esc closes it and the page behind it doesn't scroll.
+    useEffect(() => {
+        if (!menuOpen) return undefined
+        const onKey = (e) => { if (e.key === 'Escape') setMenuOpen(false) }
+        document.addEventListener('keydown', onKey)
+        const previousOverflow = document.body.style.overflow
+        document.body.style.overflow = 'hidden'
+        return () => {
+            document.removeEventListener('keydown', onKey)
+            document.body.style.overflow = previousOverflow
+        }
+    }, [menuOpen])
+
+    const currentTab = useMemo(
+        () => TABS.find((t) => location.pathname.startsWith(t.to)),
+        [location.pathname]
+    )
+    // The current page isn't one of the 4 dock tabs -> "More" shows its name and lights up.
+    const moreIsCurrent = Boolean(currentTab) && !DOCK_PATHS.includes(currentTab.to)
+
+    const todayLabel = useMemo(
+        () => new Date().toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short' }),
+        []
+    )
+
     function handleLogout() {
+        setMenuOpen(false)
         logout()
         navigate('/admin/login', { replace: true })
     }
 
+    function badgeFor(tab) {
+        return tab.to === '/admin/orders' ? newOrderCount : 0
+    }
+
+    // ---- Desktop sidebar link ----
     function renderTab(tab) {
-        const badge = tab.to === '/admin/orders' ? newOrderCount : 0
+        const badge = badgeFor(tab)
         const Icon = Icons[tab.icon]
         return (
             <NavLink
@@ -149,8 +204,54 @@ export default function AdminLayout() {
         )
     }
 
+    // ---- Phone: bottom dock item ----
+    function renderDockTab(tab) {
+        const badge = badgeFor(tab)
+        const Icon = Icons[tab.icon]
+        return (
+            <NavLink
+                key={tab.to}
+                to={tab.to}
+                className={({ isActive }) => 'admin-dock-item' + (isActive ? ' is-current' : '')}
+            >
+                <span className="admin-dock-icon">
+                    {Icon && <Icon />}
+                    {badge > 0 && (
+                        <span className="admin-dock-badge" aria-label={`${badge} new orders`}>
+                            {badge > 99 ? '99+' : badge}
+                        </span>
+                    )}
+                </span>
+                <span className="admin-dock-label">{tab.label}</span>
+            </NavLink>
+        )
+    }
+
+    // ---- Phone: tile inside the More sheet ----
+    function renderSheetTile(tab) {
+        const badge = badgeFor(tab)
+        const Icon = Icons[tab.icon]
+        return (
+            <NavLink
+                key={tab.to}
+                to={tab.to}
+                className={({ isActive }) =>
+                    'admin-sheet-tile' + (isActive ? ' is-current' : '') + (tab.soon ? ' is-soon' : '')
+                }
+            >
+                <span className="admin-sheet-tile-icon">
+                    {Icon && <Icon />}
+                    {badge > 0 && <span className="admin-dock-badge">{badge > 99 ? '99+' : badge}</span>}
+                </span>
+                <span className="admin-sheet-tile-label">{tab.label}</span>
+                {tab.soon && <em className="admin-sheet-soon">Soon</em>}
+            </NavLink>
+        )
+    }
+
     return (
         <div className="admin-shell">
+            {/* Desktop / tablet sidebar (hidden on phones) */}
             <aside className="admin-sidebar">
                 <div className="admin-brand">Gayathiri Pyrotech<span>Admin</span></div>
                 <nav className="admin-desktop-nav">
@@ -164,15 +265,70 @@ export default function AdminLayout() {
                 <button className="admin-logout" onClick={handleLogout}>Log out</button>
             </aside>
 
+            {/* Phone top bar (hidden on desktop) */}
+            <header className="admin-mobile-bar">
+                <div className="admin-mobile-mark" aria-hidden="true">GP</div>
+                <div className="admin-mobile-titles">
+                    <span className="admin-mobile-name">Gayathiri Pyrotech</span>
+                    <span className="admin-mobile-sub">Admin · {todayLabel}</span>
+                </div>
+                <button type="button" className="admin-mobile-logout" onClick={handleLogout} aria-label="Log out">
+                    <LogoutIcon />
+                </button>
+            </header>
+
             <main className="admin-content">
                 <Outlet context={{ orders, setOrders, ordersLoading, ordersError, reloadOrders, markOrdersSeen, lastSeenId }} />
             </main>
 
-            <nav className="admin-bottom-nav">
-                <div className="admin-bottom-nav-scroll">
-                    {TABS.map(renderTab)}
-                </div>
+            {/* Phone bottom dock (hidden on desktop) */}
+            <nav className="admin-dock" aria-label="Main navigation">
+                {DOCK_TABS.map(renderDockTab)}
+                <button
+                    type="button"
+                    className={'admin-dock-item' + (moreIsCurrent ? ' is-current' : '')}
+                    onClick={() => setMenuOpen(true)}
+                    aria-haspopup="dialog"
+                    aria-expanded={menuOpen}
+                >
+                    <span className="admin-dock-icon"><MoreIcon /></span>
+                    <span className="admin-dock-label">{moreIsCurrent ? currentTab.label : 'More'}</span>
+                </button>
             </nav>
+
+            {/* Phone "More" sheet */}
+            {menuOpen && (
+                <>
+                    <div className="admin-sheet-backdrop" onClick={() => setMenuOpen(false)} />
+                    <div className="admin-sheet" role="dialog" aria-modal="true" aria-label="Menu">
+                        <div className="admin-sheet-handle" />
+                        <div className="admin-sheet-head">
+                            <div>
+                                <strong>Menu</strong>
+                                <span>Everything in your shop, one tap away</span>
+                            </div>
+                            <button type="button" className="admin-sheet-close" onClick={() => setMenuOpen(false)} aria-label="Close menu">
+                                <CloseIcon />
+                            </button>
+                        </div>
+
+                        <div className="admin-sheet-body">
+                            {NAV_GROUPS.map((group) => (
+                                <section className="admin-sheet-group" key={group.label}>
+                                    <h4>{group.label}</h4>
+                                    <div className="admin-sheet-grid">
+                                        {group.items.map(renderSheetTile)}
+                                    </div>
+                                </section>
+                            ))}
+                        </div>
+
+                        <button type="button" className="admin-sheet-logout" onClick={handleLogout}>
+                            <LogoutIcon /> Log out
+                        </button>
+                    </div>
+                </>
+            )}
         </div>
     )
 }
