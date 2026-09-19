@@ -4,9 +4,7 @@ import { useAdminAuth } from './AdminAuthContext.jsx'
 import { apiGet, UnauthorizedError } from './adminApi.js'
 import { Icons } from './AdminIcons.jsx'
 
-// Full planned sidebar, in the order the shop wants it. `soon: true` items
-// route to a placeholder page — they're on the build list but not wired to
-// real data yet, so the structure is visible today without faking data.
+// Full sidebar, in the order the shop wants it. Every page is live.
 const NAV_GROUPS = [
     {
         label: 'Overview',
@@ -54,7 +52,7 @@ const TABS = NAV_GROUPS.flatMap((g) => g.items)
 // Phone layout: only the 4 things used every day live in the bottom dock;
 // everything else is one tap away in the "More" sheet (grouped like the desktop sidebar).
 const DOCK_PATHS = ['/admin/dashboard', '/admin/orders', '/admin/products', '/admin/reports']
-const DOCK_TABS = DOCK_PATHS.map((to) => TABS.find((t) => t.to === to))
+const DOCK_TABS = DOCK_PATHS.map((to) => TABS.find((t) => t.to === to)).filter(Boolean)
 
 const svgProps = {
     width: 22, height: 22, viewBox: '0 0 24 24', fill: 'none',
@@ -80,6 +78,16 @@ function readLastSeen() {
     try { return Number(localStorage.getItem(SEEN_KEY)) || 0 } catch { return 0 }
 }
 
+// Same "unread" idea as orders, but simpler: a request counts as new until
+// its status moves off NEW (the admin working the lead is what clears it,
+// not just opening the tab — a lead you haven't actually contacted yet
+// should keep nagging you).
+const ESTIMATE_REQUEST_POLL_MS = 45000
+
+function formatBadge(n) {
+    return n > 99 ? '99+' : String(n)
+}
+
 export default function AdminLayout() {
     const { logout } = useAdminAuth()
     const navigate = useNavigate()
@@ -90,6 +98,8 @@ export default function AdminLayout() {
     const [ordersError, setOrdersError] = useState('')
     const [lastSeenId, setLastSeenId] = useState(readLastSeen)
     const [menuOpen, setMenuOpen] = useState(false)
+
+    const [newEstimateRequests, setNewEstimateRequests] = useState(0)
 
     const reloadOrders = useCallback(async ({ silent = false } = {}) => {
         if (!silent) {
@@ -120,6 +130,32 @@ export default function AdminLayout() {
             document.removeEventListener('visibilitychange', onVisible)
         }
     }, [reloadOrders])
+
+    // Poll the online-estimate-request count the same way orders are polled
+    // (on an interval, and again as soon as the tab becomes visible).
+    useEffect(() => {
+        let cancelled = false
+        async function checkNewRequests() {
+            try {
+                const list = await apiGet('/api/estimate-requests')
+                if (!cancelled) setNewEstimateRequests(list.filter((r) => r.status === 'NEW').length)
+            } catch (err) {
+                if (err instanceof UnauthorizedError) return logout()
+                // Non-fatal — the badge just stays at its last known value.
+            }
+        }
+        checkNewRequests()
+        const timer = setInterval(() => {
+            if (!document.hidden) checkNewRequests()
+        }, ESTIMATE_REQUEST_POLL_MS)
+        const onVisible = () => { if (!document.hidden) checkNewRequests() }
+        document.addEventListener('visibilitychange', onVisible)
+        return () => {
+            cancelled = true
+            clearInterval(timer)
+            document.removeEventListener('visibilitychange', onVisible)
+        }
+    }, [logout])
 
     const maxOrderId = useMemo(
         () => orders.reduce((max, o) => Math.max(max, o.id || 0), 0),
@@ -161,8 +197,9 @@ export default function AdminLayout() {
         }
     }, [menuOpen])
 
+    // Exact match or a sub-route ("/admin/orders/12"), never a prefix of a sibling path.
     const currentTab = useMemo(
-        () => TABS.find((t) => location.pathname.startsWith(t.to)),
+        () => TABS.find((t) => location.pathname === t.to || location.pathname.startsWith(t.to + '/')),
         [location.pathname]
     )
     // The current page isn't one of the 4 dock tabs -> "More" shows its name and lights up.
@@ -180,8 +217,26 @@ export default function AdminLayout() {
     }
 
     function badgeFor(tab) {
-        return tab.to === '/admin/orders' ? newOrderCount : 0
+        if (tab.to === '/admin/orders') return newOrderCount
+        if (tab.to === '/admin/estimate-requests') return newEstimateRequests
+        return 0
     }
+
+    function badgeLabelFor(tab, badge) {
+        return tab.to === '/admin/estimate-requests'
+            ? `${badge} new online estimate requests`
+            : `${badge} new orders`
+    }
+
+    // Badges on tabs that live only inside the "More" sheet would be invisible on a phone,
+    // so their total is shown on the More button.
+    const moreBadge = useMemo(
+        () => TABS
+            .filter((t) => !DOCK_PATHS.includes(t.to))
+            .reduce((sum, t) => sum + badgeFor(t), 0),
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+        [newOrderCount, newEstimateRequests]
+    )
 
     // ---- Desktop sidebar link ----
     function renderTab(tab) {
@@ -191,14 +246,13 @@ export default function AdminLayout() {
             <NavLink
                 key={tab.to}
                 to={tab.to}
-                className={({ isActive }) => 'admin-nav-link' + (isActive ? ' active' : '') + (tab.soon ? ' is-soon' : '')}
+                className={({ isActive }) => 'admin-nav-link' + (isActive ? ' active' : '')}
             >
                 <span className="admin-nav-icon">{Icon && <Icon />}</span>
                 <span className="admin-nav-text">{tab.label}</span>
-                {tab.soon && <span className="admin-nav-soon">Soon</span>}
                 {badge > 0 && (
-                    <span className="admin-nav-badge" aria-label={`${badge} new orders`}>
-                        {badge > 99 ? '99+' : badge}
+                    <span className="admin-nav-badge" aria-label={badgeLabelFor(tab, badge)}>
+                        {formatBadge(badge)}
                     </span>
                 )}
             </NavLink>
@@ -218,8 +272,8 @@ export default function AdminLayout() {
                 <span className="admin-dock-icon">
                     {Icon && <Icon />}
                     {badge > 0 && (
-                        <span className="admin-dock-badge" aria-label={`${badge} new orders`}>
-                            {badge > 99 ? '99+' : badge}
+                        <span className="admin-dock-badge" aria-label={badgeLabelFor(tab, badge)}>
+                            {formatBadge(badge)}
                         </span>
                     )}
                 </span>
@@ -236,16 +290,17 @@ export default function AdminLayout() {
             <NavLink
                 key={tab.to}
                 to={tab.to}
-                className={({ isActive }) =>
-                    'admin-sheet-tile' + (isActive ? ' is-current' : '') + (tab.soon ? ' is-soon' : '')
-                }
+                className={({ isActive }) => 'admin-sheet-tile' + (isActive ? ' is-current' : '')}
             >
                 <span className="admin-sheet-tile-icon">
                     {Icon && <Icon />}
-                    {badge > 0 && <span className="admin-dock-badge">{badge > 99 ? '99+' : badge}</span>}
+                    {badge > 0 && (
+                        <span className="admin-dock-badge" aria-label={badgeLabelFor(tab, badge)}>
+                            {formatBadge(badge)}
+                        </span>
+                    )}
                 </span>
                 <span className="admin-sheet-tile-label">{tab.label}</span>
-                {tab.soon && <em className="admin-sheet-soon">Soon</em>}
             </NavLink>
         )
     }
@@ -292,7 +347,14 @@ export default function AdminLayout() {
                     aria-haspopup="dialog"
                     aria-expanded={menuOpen}
                 >
-                    <span className="admin-dock-icon"><MoreIcon /></span>
+                    <span className="admin-dock-icon">
+                        <MoreIcon />
+                        {moreBadge > 0 && (
+                            <span className="admin-dock-badge" aria-label={`${moreBadge} new in menu`}>
+                                {formatBadge(moreBadge)}
+                            </span>
+                        )}
+                    </span>
                     <span className="admin-dock-label">{moreIsCurrent ? currentTab.label : 'More'}</span>
                 </button>
             </nav>
@@ -308,7 +370,13 @@ export default function AdminLayout() {
                                 <strong>Menu</strong>
                                 <span>Everything in your shop, one tap away</span>
                             </div>
-                            <button type="button" className="admin-sheet-close" onClick={() => setMenuOpen(false)} aria-label="Close menu">
+                            <button
+                                type="button"
+                                className="admin-sheet-close"
+                                onClick={() => setMenuOpen(false)}
+                                aria-label="Close menu"
+                                autoFocus
+                            >
                                 <CloseIcon />
                             </button>
                         </div>
