@@ -4,23 +4,39 @@ import { useCart } from '../hooks/useCart.js'
 import { buildWhatsAppOrderUrl } from '../utils/whatsapp.js'
 import './CartDrawer.css'
 
+const MIN_ORDER_FOR_DELIVERY = 3000
+
 export default function CartDrawer() {
   const { t, pickField, lang } = useLanguage()
   const { items, isOpen, setIsOpen, increment, decrement, removeItem, clearCart, totalPrice } = useCart()
 
   const [customerName, setCustomerName] = useState('')
   const [customerPhone, setCustomerPhone] = useState('')
+  const [deliveryAddress, setDeliveryAddress] = useState('')
   const [fulfillment, setFulfillment] = useState('pickup')
 
   if (!isOpen) return null
 
-  const detailsMissing = customerName.trim() === '' || customerPhone.trim() === ''
+  const qualifiesForDelivery = totalPrice >= MIN_ORDER_FOR_DELIVERY
+  const amountToUnlock = MIN_ORDER_FOR_DELIVERY - totalPrice
+
+  // Below threshold: pickup is forced, only phone is required.
+  // At/above threshold: name + phone required, and address required if delivery is chosen.
+  const effectiveFulfillment = qualifiesForDelivery ? fulfillment : 'pickup'
+
+  const detailsMissing = qualifiesForDelivery
+    ? customerName.trim() === '' ||
+    customerPhone.trim() === '' ||
+    (effectiveFulfillment === 'delivery' && deliveryAddress.trim() === '')
+    : customerPhone.trim() === ''
+
   const canCheckout = items.length > 0 && !detailsMissing
 
   const whatsappUrl = buildWhatsAppOrderUrl(items, totalPrice, lang, {
     customerName,
     customerPhone,
-    fulfillment,
+    fulfillment: effectiveFulfillment,
+    deliveryAddress: effectiveFulfillment === 'delivery' ? deliveryAddress : '',
   })
 
   return (
@@ -55,16 +71,22 @@ export default function CartDrawer() {
 
         {items.length > 0 && (
           <div className="cart-customer-details" style={{ padding: '0 16px', display: 'flex', flexDirection: 'column', gap: 10 }}>
-            <div>
-              <label style={detailsLabelStyle}>{t('cart.nameLabel')}</label>
-              <input
-                type="text"
-                value={customerName}
-                onChange={(e) => setCustomerName(e.target.value)}
-                placeholder={t('cart.namePlaceholder')}
-                style={detailsInputStyle}
-              />
-            </div>
+
+            {/* Name — only required/shown once delivery becomes possible */}
+            {qualifiesForDelivery && (
+              <div>
+                <label style={detailsLabelStyle}>{t('cart.nameLabel')}</label>
+                <input
+                  type="text"
+                  value={customerName}
+                  onChange={(e) => setCustomerName(e.target.value)}
+                  placeholder={t('cart.namePlaceholder')}
+                  style={detailsInputStyle}
+                />
+              </div>
+            )}
+
+            {/* Phone — always required */}
             <div>
               <label style={detailsLabelStyle}>{t('cart.phoneLabel')}</label>
               <input
@@ -75,25 +97,47 @@ export default function CartDrawer() {
                 style={detailsInputStyle}
               />
             </div>
-            <div>
-              <label style={detailsLabelStyle}>{t('cart.fulfillment')}</label>
-              <div style={{ display: 'flex', gap: 8 }}>
-                <button
-                  type="button"
-                  onClick={() => setFulfillment('pickup')}
-                  style={fulfillmentBtnStyle(fulfillment === 'pickup')}
-                >
-                  {t('cart.pickup')}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setFulfillment('delivery')}
-                  style={fulfillmentBtnStyle(fulfillment === 'delivery')}
-                >
-                  {t('cart.delivery')}
-                </button>
+
+            {/* Pickup / Delivery toggle — only shown once order qualifies */}
+            {qualifiesForDelivery ? (
+              <div>
+                <label style={detailsLabelStyle}>{t('cart.fulfillment')}</label>
+                <div style={{ display: 'flex', gap: 8 }}>
+                  <button
+                    type="button"
+                    onClick={() => setFulfillment('pickup')}
+                    style={fulfillmentBtnStyle(fulfillment === 'pickup')}
+                  >
+                    {t('cart.pickup')}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setFulfillment('delivery')}
+                    style={fulfillmentBtnStyle(fulfillment === 'delivery')}
+                  >
+                    {t('cart.delivery')}
+                  </button>
+                </div>
               </div>
-            </div>
+            ) : (
+              <p className="cart-delivery-locked-hint" style={{ fontSize: 12, color: '#b45309', margin: 0 }}>
+                {t('cart.unlockDelivery').replace('{amount}', amountToUnlock.toFixed(0))}
+              </p>
+            )}
+
+            {/* Address — only shown when delivery is actually selected */}
+            {qualifiesForDelivery && fulfillment === 'delivery' && (
+              <div>
+                <label style={detailsLabelStyle}>{t('cart.addressLabel')}</label>
+                <textarea
+                  value={deliveryAddress}
+                  onChange={(e) => setDeliveryAddress(e.target.value)}
+                  placeholder={t('cart.addressPlaceholder')}
+                  rows={3}
+                  style={{ ...detailsInputStyle, resize: 'vertical', fontFamily: 'inherit' }}
+                />
+              </div>
+            )}
           </div>
         )}
 
