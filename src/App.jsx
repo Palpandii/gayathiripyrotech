@@ -8,6 +8,7 @@ import Categories from './pages/Categories.jsx'
 import ProductDetail from './pages/ProductDetail.jsx'
 import AboutUs from './pages/AboutUs.jsx'
 import ContactUs from './pages/ContactUs.jsx'
+import GetEstimate from './pages/GetEstimate.jsx'
 import FireworksOverlay from './components/FireworksOverlay.jsx'
 
 import './admin/admin.css'
@@ -23,7 +24,9 @@ import BannerTab from './admin/pages/BannerTab.jsx'
 import DashboardTab from './admin/pages/DashboardTab.jsx'
 import ReportsTab from './admin/pages/ReportsTab.jsx'
 import CustomersTab from './admin/pages/CustomersTab.jsx'
-import ComingSoonTab from './admin/pages/ComingSoonTab.jsx'
+import PaymentsTab from './admin/pages/PaymentsTab.jsx'
+import UsersTab from './admin/pages/UsersTab.jsx'
+import EstimateRequestsTab from './admin/pages/EstimateRequestsTab.jsx'
 import ExpensesTab from './admin/pages/ExpensesTab.jsx'
 import PurchaseTab from './admin/pages/PurchaseTab.jsx'
 import TaxesTab from './admin/pages/TaxesTab.jsx'
@@ -42,6 +45,7 @@ function Storefront() {
           <Route path="/product/:id" element={<ProductDetail />} />
           <Route path="/about" element={<AboutUs />} />
           <Route path="/contact" element={<ContactUs />} />
+          <Route path="/get-estimate" element={<GetEstimate />} />
         </Routes>
       </main>
       <Footer />
@@ -68,14 +72,15 @@ function AdminSection() {
           <Route path="products" element={<ProductsTab />} />
           <Route path="orders" element={<OrdersTab />} />
           <Route path="estimates" element={<EstimatesTab />} />
+          <Route path="estimate-requests" element={<EstimateRequestsTab />} />
           <Route path="customers" element={<CustomersTab />} />
           <Route path="categories" element={<CategoriesTab />} />
           <Route path="banner" element={<BannerTab />} />
           <Route path="expenses" element={<ExpensesTab />} />
           <Route path="purchase" element={<PurchaseTab />} />
           <Route path="taxes" element={<TaxesTab />} />
-          <Route path="payments" element={<ComingSoonTab title="Payments" />} />
-          <Route path="users" element={<ComingSoonTab title="Users" />} />
+          <Route path="payments" element={<PaymentsTab />} />
+          <Route path="users" element={<UsersTab />} />
         </Route>
       </Routes>
     </AdminAuthProvider>

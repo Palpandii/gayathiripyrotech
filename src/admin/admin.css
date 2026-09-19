@@ -1578,3 +1578,298 @@ button:disabled {
     color: #C41E31;
     font-weight: 800;
 }
+
+/* ===========================================================
+   PHASE 3 ADDITIONS
+=========================================================== */
+
+.admin-method-cash {
+    background: rgba(31, 227, 180, 0.18);
+    color: #109E7C;
+}
+
+.admin-method-upi {
+    background: rgba(124, 77, 255, 0.18);
+    color: #7C4DFF;
+}
+
+.admin-method-card {
+    background: rgba(46, 123, 255, 0.18);
+    color: #2E7BFF;
+}
+
+.admin-method-bank_transfer {
+    background: rgba(255, 179, 0, 0.18);
+    color: #b8860b;
+}
+
+.admin-user-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 16px;
+}
+
+.admin-user-card {
+    background: var(--panel);
+    border: 1px solid var(--panel-line);
+    border-radius: var(--radius-m);
+    padding: 18px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    box-shadow: var(--shadow-soft);
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.admin-user-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-deep);
+}
+
+.admin-user-card.is-inactive {
+    opacity: 0.55;
+}
+
+.admin-user-avatar {
+    flex-shrink: 0;
+    width: 46px;
+    height: 46px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-weight: 700;
+    font-size: 0.95rem;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+
+.admin-role-owner {
+    background: linear-gradient(145deg, var(--gold), var(--gold-deep));
+}
+
+.admin-role-manager {
+    background: linear-gradient(145deg, var(--spark-violet), #5A32C4);
+}
+
+.admin-role-staff {
+    background: linear-gradient(145deg, var(--emerald), var(--emerald-deep));
+}
+
+.admin-role-delivery {
+    background: linear-gradient(145deg, var(--ember), var(--ember-deep));
+}
+
+.admin-user-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.admin-user-name {
+    font-weight: 700;
+    color: var(--sand);
+    font-size: 0.98rem;
+}
+
+.admin-user-meta {
+    color: var(--sand-dim);
+    font-size: 0.82rem;
+    margin: 2px 0 8px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.admin-user-tags {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+
+.admin-role-badge-owner {
+    background: rgba(255, 179, 0, 0.18);
+    color: #b8860b;
+}
+
+.admin-role-badge-manager {
+    background: rgba(124, 77, 255, 0.18);
+    color: #7C4DFF;
+}
+
+.admin-role-badge-staff {
+    background: rgba(31, 227, 180, 0.18);
+    color: #109E7C;
+}
+
+.admin-role-badge-delivery {
+    background: rgba(255, 138, 61, 0.18);
+    color: #C4571E;
+}
+
+.admin-request-list {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.admin-request-card {
+    background: var(--panel);
+    border: 1px solid var(--panel-line);
+    border-left: 4px solid var(--spark-rose, #FF3DA6);
+    border-radius: var(--radius-m);
+    padding: 16px 18px;
+    box-shadow: var(--shadow-soft);
+}
+
+.admin-request-top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.admin-request-name {
+    font-weight: 700;
+    color: var(--sand);
+    font-size: 1rem;
+}
+
+.admin-request-body {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-top: 10px;
+}
+
+.admin-request-chip {
+    background: rgba(255, 255, 255, 0.08);
+    color: var(--sand-dim);
+    padding: 3px 10px;
+    border-radius: 999px;
+    font-size: 0.76rem;
+}
+
+.admin-request-notes {
+    color: var(--sand-dim);
+    font-size: 0.86rem;
+    margin: 10px 0 0;
+    line-height: 1.5;
+}
+
+.admin-request-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 12px;
+}
+
+.admin-request-status-new {
+    background: rgba(255, 61, 166, 0.18);
+    color: #C4127A;
+}
+
+.admin-request-status-contacted {
+    background: rgba(46, 123, 255, 0.18);
+    color: #2E7BFF;
+}
+
+.admin-request-status-converted {
+    background: rgba(31, 227, 180, 0.18);
+    color: #109E7C;
+}
+
+.admin-request-status-closed {
+    background: rgba(255, 255, 255, 0.12);
+    color: var(--sand-dim);
+}
+
+.get-estimate-page {
+    min-height: 70vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 20px;
+    background: var(--ink);
+}
+
+.get-estimate-card {
+    background: var(--panel);
+    border: 1px solid var(--panel-line);
+    border-radius: var(--radius-m);
+    padding: 36px;
+    width: 100%;
+    max-width: 520px;
+    box-shadow: var(--shadow-deep);
+}
+
+.get-estimate-card h1 {
+    color: var(--sand);
+    margin: 0 0 6px;
+    font-size: 1.5rem;
+}
+
+.get-estimate-sub {
+    color: var(--sand-dim);
+    margin: 0 0 22px;
+}
+
+.get-estimate-form {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.get-estimate-form label {
+    color: var(--sand-dim);
+    font-size: 0.85rem;
+    margin-top: 10px;
+}
+
+.get-estimate-form input,
+.get-estimate-form select,
+.get-estimate-form textarea {
+    padding: 10px 12px;
+    border-radius: var(--radius-s);
+    border: 1px solid var(--panel-line);
+    background: var(--ink-soft);
+    color: var(--sand);
+    font-size: 0.95rem;
+    font-family: inherit;
+    resize: vertical;
+}
+
+.get-estimate-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+}
+
+.get-estimate-error {
+    color: #ff6b6b;
+    font-size: 0.85rem;
+    margin-top: 10px;
+}
+
+.get-estimate-submit {
+    margin-top: 18px;
+    width: 100%;
+    padding: 12px;
+    font-size: 1rem;
+}
+
+.get-estimate-done h1 {
+    margin-bottom: 10px;
+}
+
+.get-estimate-done p {
+    color: var(--sand-dim);
+    line-height: 1.6;
+    margin: 0;
+}
+
+@media (max-width: 520px) {
+    .get-estimate-row {
+        grid-template-columns: 1fr;
+    }
+}

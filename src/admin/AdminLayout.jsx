@@ -28,8 +28,9 @@ const NAV_GROUPS = [
         items: [
             { to: '/admin/orders', label: 'Orders', icon: 'orders' },
             { to: '/admin/estimates', label: 'Estimates', icon: 'estimates' },
+            { to: '/admin/estimate-requests', label: 'Online Estimates', icon: 'onlineEstimates' },
             { to: '/admin/customers', label: 'Customers', icon: 'customers' },
-            { to: '/admin/payments', label: 'Payments', icon: 'payments', soon: true },
+            { to: '/admin/payments', label: 'Payments', icon: 'payments' },
         ],
     },
     {
@@ -43,7 +44,7 @@ const NAV_GROUPS = [
     {
         label: 'Admin',
         items: [
-            { to: '/admin/users', label: 'Users', icon: 'users', soon: true },
+            { to: '/admin/users', label: 'Users', icon: 'users' },
         ],
     },
 ]
