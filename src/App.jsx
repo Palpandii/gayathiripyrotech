@@ -8,6 +8,7 @@ import Categories from './pages/Categories.jsx'
 import ProductDetail from './pages/ProductDetail.jsx'
 import AboutUs from './pages/AboutUs.jsx'
 import ContactUs from './pages/ContactUs.jsx'
+import FireworksOverlay from './components/FireworksOverlay.jsx'
 
 import './admin/admin.css'
 import { AdminAuthProvider } from './admin/AdminAuthContext.jsx'
@@ -24,6 +25,7 @@ import BannerTab from './admin/pages/BannerTab.jsx'
 function Storefront() {
   return (
     <>
+      <FireworksOverlay />
       <Navbar />
       <main>
         <Routes>
