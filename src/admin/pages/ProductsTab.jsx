@@ -18,6 +18,7 @@ export default function ProductsTab() {
     const [saving, setSaving] = useState(false)
     const [uploading, setUploading] = useState(false)
     const [search, setSearch] = useState('')
+    const [togglingId, setTogglingId] = useState(null)
 
     const handleUnauthorized = useCallback(() => logout(), [logout])
 
@@ -110,6 +111,22 @@ export default function ProductsTab() {
         }
     }
 
+    async function handleToggleStock(product) {
+        setTogglingId(product.id)
+        setError('')
+        try {
+            const updated = await apiSend('PATCH', `/api/products/${product.id}/stock`, {
+                inStock: !product.inStock,
+            })
+            setProducts((list) => list.map((p) => (p.id === updated.id ? updated : p)))
+        } catch (err) {
+            if (err instanceof UnauthorizedError) return handleUnauthorized()
+            setError(err.message)
+        } finally {
+            setTogglingId(null)
+        }
+    }
+
     const filtered = products.filter((p) => {
         const q = search.trim().toLowerCase()
         if (!q) return true
@@ -148,6 +165,7 @@ export default function ProductsTab() {
                                 <th>MRP</th>
                                 <th>Price</th>
                                 <th>Video</th>
+                                <th>Stock</th>
                                 <th></th>
                             </tr>
                         </thead>
@@ -166,6 +184,29 @@ export default function ProductsTab() {
                                     <td data-label="MRP">{formatRupees(p.mrp)}</td>
                                     <td data-label="Price">{formatRupees(p.price)}</td>
                                     <td data-label="Video">{p.youtubeId ? '▶ Yes' : '—'}</td>
+                                    <td data-label="Stock">
+                                        <button
+                                            type="button"
+                                            onClick={() => handleToggleStock(p)}
+                                            disabled={togglingId === p.id}
+                                            style={{
+                                                background: p.inStock === false ? '#dc2626' : '#0f9d78',
+                                                color: '#fff',
+                                                padding: '6px 12px',
+                                                borderRadius: 6,
+                                                fontWeight: 700,
+                                                fontSize: 13,
+                                                border: 'none',
+                                                cursor: togglingId === p.id ? 'not-allowed' : 'pointer',
+                                                opacity: togglingId === p.id ? 0.6 : 1,
+                                                whiteSpace: 'nowrap',
+                                            }}
+                                        >
+                                            {togglingId === p.id
+                                                ? '...'
+                                                : p.inStock === false ? 'Out of Stock' : 'In Stock'}
+                                        </button>
+                                    </td>
                                     <td className="admin-row-actions" data-label="Actions">
                                         <button className="btn-secondary" onClick={() => openEdit(p)}>Edit</button>
                                         <button className="btn-icon-danger" onClick={() => handleDelete(p)}>Delete</button>
@@ -173,7 +214,7 @@ export default function ProductsTab() {
                                 </tr>
                             ))}
                             {filtered.length === 0 && (
-                                <tr><td colSpan={9} className="admin-empty">No products found.</td></tr>
+                                <tr><td colSpan={10} className="admin-empty">No products found.</td></tr>
                             )}
                         </tbody>
                     </table>
