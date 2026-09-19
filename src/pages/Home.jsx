@@ -8,11 +8,33 @@ import { useProducts } from '../hooks/useProducts.js'
 import { buildWhatsAppOrderUrl } from '../utils/whatsapp.js'
 import './Home.css'
 
+// Names of products to feature under "Popular this Season".
+// Using names instead of IDs so this keeps working even if the
+// products table gets re-seeded and IDs change.
+const FEATURED_PRODUCT_NAMES = [
+  '240 shot Multicolour',
+  'Bada Peacock',
+  'Musical Rocket',
+  'Kulfi (3pcs)',
+  '4"Naruto Fancy (2Pcs)',
+  '3" Indiana(3Pcs)',
+  'Sizzling Star',
+  '50 Items (10Pcs)',
+]
+
 export default function Home() {
   const { t, lang } = useLanguage()
   const { categories, loading: categoriesLoading } = useCategories()
   const { products, loading: productsLoading } = useProducts()
-  const featured = products.filter((p) => [8, 55, 89, 130, 9, 67, 152, 61].includes(p.id)).slice(0, 8)
+
+  const featured = products
+    .filter((p) => FEATURED_PRODUCT_NAMES.includes(p.name_en))
+    .slice(0, 8)
+
+  // Fallback: if none of the named products are found (e.g. names changed),
+  // just show the first 8 products so the section is never empty.
+  const featuredToShow = featured.length > 0 ? featured : products.slice(0, 8)
+
   const enquiryUrl = buildWhatsAppOrderUrl([], 0, lang)
 
   return (
@@ -47,7 +69,7 @@ export default function Home() {
             <p>Loading…</p>
           ) : (
             <div className="product-grid">
-              {featured.map((p) => (
+              {featuredToShow.map((p) => (
                 <ProductCard key={p.id} product={p} />
               ))}
             </div>
