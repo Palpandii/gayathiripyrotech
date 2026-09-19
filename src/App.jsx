@@ -20,6 +20,10 @@ import OrdersTab from './admin/pages/OrdersTab.jsx'
 import EstimatesTab from './admin/pages/EstimatesTab.jsx'
 import CategoriesTab from './admin/pages/CategoriesTab.jsx'
 import BannerTab from './admin/pages/BannerTab.jsx'
+import DashboardTab from './admin/pages/DashboardTab.jsx'
+import ReportsTab from './admin/pages/ReportsTab.jsx'
+import CustomersTab from './admin/pages/CustomersTab.jsx'
+import ComingSoonTab from './admin/pages/ComingSoonTab.jsx'
 
 
 function Storefront() {
@@ -55,13 +59,20 @@ function AdminSection() {
             </ProtectedRoute>
           }
         >
-          <Route index element={<Navigate to="products" replace />} />
+          <Route index element={<Navigate to="dashboard" replace />} />
+          <Route path="dashboard" element={<DashboardTab />} />
+          <Route path="reports" element={<ReportsTab />} />
           <Route path="products" element={<ProductsTab />} />
           <Route path="orders" element={<OrdersTab />} />
           <Route path="estimates" element={<EstimatesTab />} />
+          <Route path="customers" element={<CustomersTab />} />
           <Route path="categories" element={<CategoriesTab />} />
           <Route path="banner" element={<BannerTab />} />
-
+          <Route path="expenses" element={<ComingSoonTab title="Expenses" />} />
+          <Route path="purchase" element={<ComingSoonTab title="Purchase" />} />
+          <Route path="taxes" element={<ComingSoonTab title="Taxes" />} />
+          <Route path="payments" element={<ComingSoonTab title="Payments" />} />
+          <Route path="users" element={<ComingSoonTab title="Users" />} />
         </Route>
       </Routes>
     </AdminAuthProvider>

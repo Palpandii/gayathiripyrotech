@@ -2,19 +2,51 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { NavLink, Outlet, useNavigate } from 'react-router-dom'
 import { useAdminAuth } from './AdminAuthContext.jsx'
 import { apiGet, UnauthorizedError } from './adminApi.js'
+import { Icons } from './AdminIcons.jsx'
 
-const TABS = [
-    { to: '/admin/products', label: 'Products' },
-    { to: '/admin/orders', label: 'Orders' },
-    { to: '/admin/estimates', label: 'Estimates' },
-    { to: '/admin/categories', label: 'Categories' },
-    { to: '/admin/banner', label: 'Banner' },
-
+const NAV_GROUPS = [
+    {
+        label: 'Overview',
+        items: [
+            { to: '/admin/dashboard', label: 'Dashboard', icon: 'dashboard' },
+            { to: '/admin/reports', label: 'Reports', icon: 'reports' },
+        ],
+    },
+    {
+        label: 'Catalog',
+        items: [
+            { to: '/admin/products', label: 'Products', icon: 'products' },
+            { to: '/admin/categories', label: 'Categories', icon: 'categories' },
+            { to: '/admin/banner', label: 'Banner', icon: 'banner' },
+        ],
+    },
+    {
+        label: 'Sales',
+        items: [
+            { to: '/admin/orders', label: 'Orders', icon: 'orders' },
+            { to: '/admin/estimates', label: 'Estimates', icon: 'estimates' },
+            { to: '/admin/customers', label: 'Customers', icon: 'customers' },
+            { to: '/admin/payments', label: 'Payments', icon: 'payments', soon: true },
+        ],
+    },
+    {
+        label: 'Finance',
+        items: [
+            { to: '/admin/expenses', label: 'Expenses', icon: 'expenses', soon: true },
+            { to: '/admin/purchase', label: 'Purchase', icon: 'purchase', soon: true },
+            { to: '/admin/taxes', label: 'Taxes', icon: 'taxes', soon: true },
+        ],
+    },
+    {
+        label: 'Admin',
+        items: [
+            { to: '/admin/users', label: 'Users', icon: 'users', soon: true },
+        ],
+    },
 ]
 
-// New-order badge: an order counts as "new" while it is still PENDING and its id
-// is higher than the last id the admin saw on the Orders page. Opening the
-// Orders tab clears the badge (like opening a chat clears unread messages).
+const TABS = NAV_GROUPS.flatMap((g) => g.items)
+
 const SEEN_KEY = 'as_admin_orders_last_seen_id'
 const POLL_MS = 30000
 
@@ -47,7 +79,6 @@ export default function AdminLayout() {
         }
     }, [logout])
 
-    // Load once, then check for new orders every 30s (and when the tab is opened again).
     useEffect(() => {
         reloadOrders()
         const timer = setInterval(() => {
@@ -78,7 +109,6 @@ export default function AdminLayout() {
         }
     }, [maxOrderId, lastSeenId])
 
-    // Browser tab title shows the count too, e.g. "(2) New orders".
     useEffect(() => {
         const original = document.title
         if (newOrderCount > 0) document.title = `(${newOrderCount}) New orders — Admin`
@@ -92,13 +122,16 @@ export default function AdminLayout() {
 
     function renderTab(tab) {
         const badge = tab.to === '/admin/orders' ? newOrderCount : 0
+        const Icon = Icons[tab.icon]
         return (
             <NavLink
                 key={tab.to}
                 to={tab.to}
-                className={({ isActive }) => 'admin-nav-link' + (isActive ? ' active' : '')}
+                className={({ isActive }) => 'admin-nav-link' + (isActive ? ' active' : '') + (tab.soon ? ' is-soon' : '')}
             >
-                <span>{tab.label}</span>
+                <span className="admin-nav-icon">{Icon && <Icon />}</span>
+                <span className="admin-nav-text">{tab.label}</span>
+                {tab.soon && <span className="admin-nav-soon">Soon</span>}
                 {badge > 0 && (
                     <span className="admin-nav-badge" aria-label={`${badge} new orders`}>
                         {badge > 99 ? '99+' : badge}
@@ -113,7 +146,12 @@ export default function AdminLayout() {
             <aside className="admin-sidebar">
                 <div className="admin-brand">Gayathiri Pyrotech<span>Admin</span></div>
                 <nav className="admin-desktop-nav">
-                    {TABS.map(renderTab)}
+                    {NAV_GROUPS.map((group) => (
+                        <div className="admin-nav-group" key={group.label}>
+                            <div className="admin-nav-group-label">{group.label}</div>
+                            {group.items.map(renderTab)}
+                        </div>
+                    ))}
                 </nav>
                 <button className="admin-logout" onClick={handleLogout}>Log out</button>
             </aside>
@@ -123,7 +161,9 @@ export default function AdminLayout() {
             </main>
 
             <nav className="admin-bottom-nav">
-                {TABS.map(renderTab)}
+                <div className="admin-bottom-nav-scroll">
+                    {TABS.map(renderTab)}
+                </div>
             </nav>
         </div>
     )
