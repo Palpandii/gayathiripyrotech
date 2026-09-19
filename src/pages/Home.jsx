@@ -12,7 +12,7 @@ export default function Home() {
   const { t, lang } = useLanguage()
   const { categories, loading: categoriesLoading } = useCategories()
   const { products, loading: productsLoading } = useProducts()
-  const featured = products.filter((p) => [8, 55, 89, 130, 152, 191, 9, 61].includes(p.id)).slice(0, 8)
+  const featured = products.filter((p) => [8, 55, 89, 130, 9, 67, 152, 61].includes(p.id)).slice(0, 8)
   const enquiryUrl = buildWhatsAppOrderUrl([], 0, lang)
 
   return (
