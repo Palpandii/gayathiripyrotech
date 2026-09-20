@@ -4,6 +4,110 @@ import { useAdminAuth } from '../AdminAuthContext.jsx'
 import { formatRupees, formatDate } from '../utils/format.js'
 import LineItemsBuilder, { newRow } from '../components/LineItemsBuilder.jsx'
 
+// Shown at the top of the printed estimate.
+const SHOP_NAME = 'Gayathiri Pyrotech'
+const SHOP_PHONE = '9787503426'
+
+function escapeHtml(value) {
+    return String(value ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+}
+
+// Builds a printable page from the estimate row and opens the browser print dialog.
+// Uses a hidden iframe so it isn't blocked like a popup window would be.
+function printEstimate(est) {
+    const items = est.items || []
+    const rows = items.map((it, i) => {
+        const qty = Number(it.quantity) || 0
+        const price = Number(it.unitPrice) || 0
+        return `<tr>
+            <td>${i + 1}</td>
+            <td>${escapeHtml(it.productName)}</td>
+            <td class="num">${qty}</td>
+            <td class="num">${escapeHtml(formatRupees(price))}</td>
+            <td class="num">${escapeHtml(formatRupees(qty * price))}</td>
+        </tr>`
+    }).join('')
+
+    const html = `<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Estimate #${escapeHtml(est.id)}</title>
+<style>
+    @page { size: A4; margin: 14mm; }
+    * { box-sizing: border-box; }
+    body { font-family: Arial, Helvetica, sans-serif; color: #111; font-size: 13px; margin: 0; }
+    .head { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid #111; padding-bottom: 10px; }
+    .shop h1 { margin: 0 0 4px; font-size: 22px; }
+    .shop p { margin: 0; font-size: 13px; }
+    .meta { text-align: right; }
+    .meta h2 { margin: 0 0 4px; font-size: 18px; }
+    .meta p { margin: 0; }
+    .cust { margin: 14px 0; }
+    .cust p { margin: 2px 0; }
+    table { width: 100%; border-collapse: collapse; margin-top: 8px; }
+    th, td { border: 1px solid #999; padding: 7px 8px; text-align: left; }
+    th { background: #eee; }
+    .num { text-align: right; white-space: nowrap; }
+    .total { text-align: right; font-size: 15px; font-weight: bold; margin-top: 12px; }
+    .note { margin-top: 28px; font-size: 11px; color: #555; }
+</style>
+</head>
+<body>
+    <div class="head">
+        <div class="shop">
+            <h1>${escapeHtml(SHOP_NAME)}</h1>
+            <p>Phone: ${escapeHtml(SHOP_PHONE)}</p>
+        </div>
+        <div class="meta">
+            <h2>ESTIMATE #${escapeHtml(est.id)}</h2>
+            <p>${escapeHtml(formatDate(est.createdAt))}</p>
+        </div>
+    </div>
+
+    <div class="cust">
+        <p><strong>Customer:</strong> ${escapeHtml(est.customerName)}</p>
+        ${est.customerPhone ? `<p><strong>Phone:</strong> ${escapeHtml(est.customerPhone)}</p>` : ''}
+        ${est.customerCity ? `<p><strong>City / Village:</strong> ${escapeHtml(est.customerCity)}</p>` : ''}
+    </div>
+
+    <table>
+        <thead>
+            <tr><th>#</th><th>Item</th><th class="num">Qty</th><th class="num">Unit price</th><th class="num">Line total</th></tr>
+        </thead>
+        <tbody>${rows}</tbody>
+    </table>
+
+    <div class="total">Total: ${escapeHtml(formatRupees(est.totalAmount))}</div>
+    <div class="note">This is an estimate, not a tax invoice.</div>
+</body>
+</html>`
+
+    const iframe = document.createElement('iframe')
+    iframe.setAttribute('aria-hidden', 'true')
+    iframe.style.cssText = 'position:fixed;right:0;bottom:0;width:0;height:0;border:0;'
+    document.body.appendChild(iframe)
+
+    const cleanup = () => { if (iframe.parentNode) iframe.parentNode.removeChild(iframe) }
+
+    const doc = iframe.contentWindow.document
+    doc.open()
+    doc.write(html)
+    doc.close()
+
+    iframe.contentWindow.onafterprint = cleanup
+    setTimeout(() => {
+        iframe.contentWindow.focus()
+        iframe.contentWindow.print()
+    }, 250)
+    // Fallback so the iframe never lingers if onafterprint doesn't fire.
+    setTimeout(cleanup, 60000)
+}
+
 export default function EstimatesTab() {
     const { logout } = useAdminAuth()
     const [estimates, setEstimates] = useState([])
@@ -112,6 +216,14 @@ export default function EstimatesTab() {
         }
     }
 
+    function handlePrint(estimate) {
+        try {
+            printEstimate(estimate)
+        } catch (err) {
+            setError(err.message || 'Could not open the print dialog.')
+        }
+    }
+
     async function handleDelete(estimate) {
         if (!confirm(`Delete estimate #${estimate.id} for ${estimate.customerName}? This can't be undone.`)) return
         setDeletingId(estimate.id)
@@ -195,6 +307,9 @@ export default function EstimatesTab() {
                                         disabled={downloadingId === est.id}
                                     >
                                         {downloadingId === est.id ? 'Preparing…' : 'Download PDF'}
+                                    </button>{' '}
+                                    <button className="btn-secondary" onClick={() => handlePrint(est)}>
+                                        Print
                                     </button>{' '}
                                     <button
                                         className="btn-icon-danger"
