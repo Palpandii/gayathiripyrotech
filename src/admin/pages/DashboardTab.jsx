@@ -8,8 +8,12 @@ export default function DashboardTab() {
     const active = useMemo(() => orders.filter((o) => o.status !== 'CANCELLED'), [orders])
     const totalSales = useMemo(() => active.reduce((s, o) => s + (o.totalAmount || 0), 0), [active])
     const pending = useMemo(() => orders.filter((o) => o.status === 'PENDING').length, [orders])
+    // Take the 6 newest orders, then show them oldest -> newest (1, 2, 3, 4 ...).
     const recent = useMemo(
-        () => [...orders].sort((a, b) => (b.id || 0) - (a.id || 0)).slice(0, 6),
+        () => [...orders]
+            .sort((a, b) => (b.id || 0) - (a.id || 0))
+            .slice(0, 6)
+            .sort((a, b) => (a.id || 0) - (b.id || 0)),
         [orders]
     )
 
